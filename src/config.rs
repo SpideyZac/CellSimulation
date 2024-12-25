@@ -1,0 +1,21 @@
+// Game Constants
+pub const MAX_CELLS: u16 = 1000;
+pub const GAME_SIZE: u16 = 1000;
+pub const GAME_SQUARE_SIZE: u16 = 10;
+pub const STARTING_FOOD_SPAWNED: u16 = 500;
+pub const STARTING_FOOD_CELL: f32 = 100.0;
+pub const FOOD_PER_TURN: u16 = 1;
+pub const FOOD_FORCE: u8 = 0;
+pub const TOXIN_FORCE: u8 = 1;
+
+// Cell Constants
+pub const CELL_SIZE_SQ: u16 = 4;
+pub const DEFAULT_MUTATION_RATE: f32 = 0.01;
+pub const PRIMARY_DEFAULT_MUTATION_RATE: f32 = 0.001;
+pub const SECONDARY_DEFAULT_MUTATION_RATE: f32 = 0.10;
+pub const ADD_CODON_DEFAULT_MUTATION_RATE: f32 = 0.005;
+pub const DELETE_CODON_DEFAULT_MUTATION_RATE: f32 = 0.0005;
+pub const FOOD_USED_PER_UNIT_MOVED: f32 = 0.1;
+pub const FOOD_USED_PER_UNIT_EMITTED: f32 = 0.05;
+pub const FOOD_USED_PER_UNIT_TOXIN_EMITTED: f32 = 0.1;
+pub const DEFAULT_FOOD_REQUIRED_TO_REPLICATE: f32 = 50.0;
