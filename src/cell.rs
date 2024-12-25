@@ -110,7 +110,8 @@ impl DNA {
                     }
                     chunk[2] = chunk[2].max(0.0);
                 }
-                2..=9 => chunk[2] = chunk[2].max(0.0),
+                2..=8 => chunk[2] = chunk[2].max(0.0),
+                9 => chunk[2] = chunk[2].max(DEFAULT_FOOD_REQUIRED_TO_REPLICATE * 0.5),
                 _ => {}
             }
         }
@@ -273,6 +274,10 @@ impl Cell {
 
     pub fn can_replicate(&self) -> bool {
         self.food >= self.food_to_replicate
+    }
+    
+    pub fn consume_replication_food(&mut self) {
+        self.food -= self.food_to_replicate;
     }
 
     pub fn get_emissions(&self) -> &Vec<(u16, f32)> {
