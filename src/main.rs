@@ -1,174 +1,106 @@
-use std::collections::{HashMap, HashSet};
+use rand::{thread_rng, Rng};
 
-const GRID_CELL_SIZE: f32 = 10.0; // This is also the max radius of the forces that a cell can emit
-const GRID_SIZE: usize = 100;
-const CELL_RADIUS: f32 = 1.0;
-const CELL_START_FOOD: u16 = 100;
+use rustc_hash::FxHashMap;
 
-// move this later
-fn calculate_dx_dy(
-    cell_x: f32,
-    cell_y: f32,
-    force_x: f32,
-    force_y: f32,
-    force_magnitude: f32,
-    cell_attraction: f32,
-) -> (f32, f32) {
-    // first we want to scale the force down to 0, 0 and scale the cell relative to that
-    let cell_x = cell_x - force_x;
-    let cell_y = cell_y - force_y;
+// Game Constants
+const MAX_CELLS: u16 = 1000;
+const GAME_SIZE: u16 = 1000; // Total board is GAME_SIZE x GAME_SIZE
+const GAME_SQUARE_SIZE: u16 = 10; // Each cell is GAME_SQUARE_SIZE x GAME_SQUARE_SIZE
+const STARTING_FOOD_SPAWNED: u16 = 500; // Food spawned at start
+const STARTING_FOOD_CELL: f32 = 100.0; // Food in each cell at start
+const FOOD_PER_TURN: u16 = 1; // Food spawned per turn
 
-    let dx = -cell_x;
-    let dy = -cell_y;
+// Cell Constants
+const CELL_SIZE_SQ: u16 = 4; // r = 2 - we try to avoid square roots
 
-    let distance_sq = dx * dx + dy * dy;
-
-    // if the distance is too small, we don't want to divide by it
-    if distance_sq < 1e-6 {
-        return (0.0, 0.0);
-    }
-
-    // scale the force by its magnitude and the cell's attraction and then scale by the inverse square of the distance as that makes the force weaker the further away the cell is
-    let scaled_force = force_magnitude * cell_attraction / distance_sq;
-
-    let dx = dx * scaled_force;
-    let dy = dy * scaled_force;
-
-    (dx, dy)
-}
-
+#[derive(Debug)]
 struct Cell {
-    id: usize,
     x: f32,
     y: f32,
-    genes: Vec<isize>,
-    attractions: HashMap<usize, f32>,
-    emissions: HashMap<usize, f32>,
-    food: u16,
-    next_x: f32,
-    next_y: f32,
-    next_forces: Vec<(usize, f32)>,
+    prev_x: f32, // used for calculating food usage
+    prev_y: f32,
+    next_forces: FxHashMap<u16, f32>, // force_id, magnitude - used for reproduction - todo: figure out how to remove this
+    dna: Vec<f32>,
+    attractions: FxHashMap<u16, f32>, // force_id, magnitude - used for calculating movements
+    emissions: Vec<(u16, f32)>,       // force_id, magnitude - used for creating forces
+    food: f32,
 }
 
 impl Cell {
-    fn new(id: usize, x: f32, y: f32, genes: Vec<isize>) -> Self {
-        // todo auto creation of attractions and emissions based on genes
-        // also when we add reproduction we need to handle the other DNA thingies
-        Cell {
-            id,
-            x,
-            y,
-            genes,
-            attractions: HashMap::new(),
-            emissions: HashMap::new(),
-            food: CELL_START_FOOD,
-            next_x: x,
-            next_y: y,
-            next_forces: Vec::new(),
+    fn new_random(max_force: u32) -> Cell {
+        let mut rng = thread_rng();
+        let mut dna = Vec::new();
+        let dna_length_codons = rng.gen_range(1..=10);
+
+        // this is the most basic type of DNA - where the Primary Base is 0 or 1 meaning it only has force attractions and emissions
+        for _ in 0..dna_length_codons {
+            let base1 = rng.gen_range(0..=1); // Primary Base
+            let base2 = rng.gen_range(0..=max_force); // Secondary Base
+            let base3 = if base1 == 0 {
+                // Tertiary Base
+                rng.gen_range(-1.0..=1.0)
+            } else {
+                rng.gen_range(0.1..=1.0)
+            };
+
+            dna.push(base1 as f32);
+            dna.push(base2 as f32);
+            dna.push(base3);
         }
-    }
-}
 
-struct SpatialGrid {
-    cells: Vec<HashSet<usize>>,
-}
+        let mut attractions = FxHashMap::default();
+        let mut emissions = Vec::new();
 
-impl SpatialGrid {
-    fn new() -> Self {
-        SpatialGrid {
-            cells: vec![HashSet::new(); GRID_SIZE * GRID_SIZE],
-        }
-    }
+        for i in (0..dna.len()).step_by(3) {
+            let base1 = dna[i] as u16;
+            let base2 = dna[i + 1] as u16;
+            let base3 = dna[i + 2];
 
-    fn add_cell(&mut self, cell: &Cell) {
-        let x = (cell.x / GRID_CELL_SIZE) as usize;
-        let y = (cell.y / GRID_CELL_SIZE) as usize;
-        let index = x + y * GRID_SIZE;
-        self.cells[index].insert(cell.id);
-    }
-
-    fn remove_cell(&mut self, cell: &Cell) {
-        let x = (cell.x / GRID_CELL_SIZE) as usize;
-        let y = (cell.y / GRID_CELL_SIZE) as usize;
-        let index = x + y * GRID_SIZE;
-        self.cells[index].remove(&cell.id);
-    }
-
-    fn move_cell(&mut self, cell: &mut Cell, new_x: f32, new_y: f32) {
-        self.remove_cell(cell);
-        cell.x = new_x;
-        cell.y = new_y;
-        let new_x = (new_x / GRID_CELL_SIZE) as usize;
-        let new_y = (new_y / GRID_CELL_SIZE) as usize;
-        let index = new_x + new_y * GRID_SIZE;
-        self.cells[index].insert(cell.id);
-    }
-
-    fn get_neighbors(&self, cell: &Cell) -> Vec<usize> {
-        let x = (cell.x / GRID_CELL_SIZE) as usize;
-        let y = (cell.y / GRID_CELL_SIZE) as usize;
-        let mut neighbors = Vec::new();
-        for dx in -1..=1 {
-            for dy in -1..=1 {
-                let nx = x as isize + dx;
-                let ny = y as isize + dy;
-                if nx >= 0 && nx < GRID_SIZE as isize && ny >= 0 && ny < GRID_SIZE as isize {
-                    let index = nx as usize + ny as usize * GRID_SIZE;
-                    for id in &self.cells[index] {
-                        neighbors.push(*id);
+            if base1 == 0 {
+                if let Some(attraction) = attractions.get_mut(&base2) {
+                    *attraction += base3;
+                } else {
+                    attractions.insert(base2, base3);
+                }
+            } else {
+                let mut found = false;
+                for (index, (force_id, magnitude)) in emissions.iter().enumerate() {
+                    if *force_id == base2 {
+                        emissions[index] = (*force_id, *magnitude + base3);
+                        found = true;
+                        break;
                     }
+                }
+
+                if !found {
+                    emissions.push((base2, base3));
                 }
             }
         }
-        neighbors
-    }
-}
 
-struct CellManager {
-    cells: Vec<Cell>,
-    grid: SpatialGrid,
-}
-
-impl CellManager {
-    fn new() -> Self {
-        CellManager {
-            cells: Vec::new(),
-            grid: SpatialGrid::new(),
+        Cell {
+            x: rng.gen_range(0.0..=GAME_SIZE as f32),
+            y: rng.gen_range(0.0..=GAME_SIZE as f32),
+            prev_x: 0.0,
+            prev_y: 0.0,
+            next_forces: FxHashMap::default(),
+            dna,
+            attractions,
+            emissions,
+            food: STARTING_FOOD_CELL,
         }
-    }
-
-    fn add_cell(&mut self, x: f32, y: f32, genes: Vec<isize>) {
-        let id = self.cells.len();
-        let cell = Cell::new(id, x, y, genes);
-        self.grid.add_cell(&cell);
-        self.cells.push(cell);
-    }
-
-    fn remove_cell(&mut self, id: usize) {
-        let cell = &self.cells[id];
-        self.grid.remove_cell(cell);
-        self.cells.remove(id);
-    }
-
-    fn move_cell(&mut self, id: usize, new_x: f32, new_y: f32) {
-        let cell = &mut self.cells[id];
-        self.grid.move_cell(cell, new_x, new_y);
-    }
-
-    fn get_neighbors(&self, id: usize) -> Vec<usize> {
-        let cell = &self.cells[id];
-        self.grid.get_neighbors(cell)
     }
 }
 
 fn main() {
-    let mut cell_manager = CellManager::new();
-    cell_manager.add_cell(0.0, 0.0, vec![1, 2, 3]);
-    cell_manager.add_cell(10.0, 10.0, vec![4, 5, 6]);
-    cell_manager.add_cell(20.0, 20.0, vec![7, 8, 9]);
-    let neighbors = cell_manager.get_neighbors(0);
-    println!("{:?}", neighbors);
-    cell_manager.move_cell(0, 10.0, 10.0);
-    let neighbors = cell_manager.get_neighbors(0);
-    println!("{:?}", neighbors);
+    let mut cells = Vec::new();
+
+    for _ in 0..1 {
+        cells.push(Cell::new_random(10));
+    }
+
+    for i in 0..1 {
+        let cell = &cells[i as usize];
+        println!("Cell {}: {:?}", i, cell);
+    }
 }
