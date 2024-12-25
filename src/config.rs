@@ -7,6 +7,7 @@ pub const STARTING_FOOD_CELL: f32 = 100.0;
 pub const FOOD_PER_TURN: u16 = 1;
 pub const FOOD_FORCE: u8 = 0;
 pub const TOXIN_FORCE: u8 = 1;
+pub const DEFAULT_FOOD_VALUE_PER_FOOD: f32 = 15.0;
 
 // Cell Constants
 pub const CELL_SIZE_SQ: u16 = 4;

@@ -275,9 +275,13 @@ impl Cell {
     pub fn can_replicate(&self) -> bool {
         self.food >= self.food_to_replicate
     }
-    
+
     pub fn consume_replication_food(&mut self) {
         self.food -= self.food_to_replicate;
+    }
+
+    pub fn eat_food(&mut self, food: f32) {
+        self.food += food;
     }
 
     pub fn get_emissions(&self) -> &Vec<(u16, f32)> {
