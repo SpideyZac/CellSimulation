@@ -1,13 +1,14 @@
 // Game Constants
-pub const STARTING_CELLS: u16 = 600;
-pub const MAX_CELLS: u16 = 1000;
+pub const STARTING_CELLS: u16 = 1000;
+pub const MAX_CELLS: u16 = 10000;
 pub const GAME_SIZE: u32 = 1000;
-pub const GAME_SQUARE_SIZE: u32 = 1;
-pub const STARTING_FOOD_SPAWNED: u16 = 1000;
-pub const FOOD_PER_TURN: u16 = 1;
+pub const GAME_SQUARE_SIZE: u32 = 100;
+pub const STARTING_FOOD_SPAWNED: u16 = 100;
+pub const FOOD_PER_TURN: u16 = 25;
 pub const FOOD_FORCE: u8 = 0;
 pub const TOXIN_FORCE: u8 = 1;
 pub const DEFAULT_FOOD_VALUE_PER_FOOD: f32 = 35.0;
+pub const DEFAULT_FOOD_VALUE_PER_CELL: f32 = 5.0;
 
 // Cell Constants
 pub const CELL_SIZE_SQ: f32 = 4.0;
@@ -16,9 +17,10 @@ pub const PRIMARY_DEFAULT_MUTATION_RATE: f32 = 0.01;
 pub const SECONDARY_DEFAULT_MUTATION_RATE: f32 = 0.15;
 pub const ADD_CODON_DEFAULT_MUTATION_RATE: f32 = 0.05;
 pub const DELETE_CODON_DEFAULT_MUTATION_RATE: f32 = 0.005;
-pub const FOOD_USED_PER_UNIT_MOVED: f32 = 0.1;
-pub const FOOD_USED_PER_UNIT_EMITTED: f32 = 0.05;
-pub const FOOD_USED_PER_UNIT_TOXIN_EMITTED: f32 = 0.06;
-pub const FOOD_USED_PER_TURN: f32 = 0.5;
-pub const DEFAULT_FOOD_REQUIRED_TO_REPLICATE: f32 = 55.0;
+pub const FOOD_USED_PER_UNIT_MOVED: f32 = 0.01;
+pub const FOOD_USED_PER_UNIT_EMITTED: f32 = 0.005;
+pub const FOOD_USED_PER_UNIT_TOXIN_EMITTED: f32 = 0.006;
+pub const FOOD_USED_PER_TURN: f32 = 0.05;
+pub const DEFAULT_FOOD_REQUIRED_TO_REPLICATE: f32 = 65.0;
 pub const STARTING_FOOD_CELL: f32 = 50.0;
+pub const FOOD_RETENTION_REPLICATION: f32 = 0.75;

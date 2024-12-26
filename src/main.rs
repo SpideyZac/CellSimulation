@@ -9,13 +9,7 @@ fn main() {
     loop {
         i += 1;
         cell_manager.update();
-        println!(
-            "{} Cells: {} {} {}",
-            i,
-            cell_manager.get_cells().len(),
-            cell_manager.next_cell_id,
-            cell_manager.next_food_id
-        );
+        println!("{} Cells: {}", i, cell_manager.get_cells().len(),);
         if cell_manager.get_cells().len() == 0 {
             cell_manager = CellManager::new();
             i = 0;

@@ -7,27 +7,29 @@ use crate::config::*;
 pub struct DNA(Vec<f32>);
 
 impl DNA {
-    fn new_random(max_force: u32) -> Self {
-        let mut rng = thread_rng();
-        let dna_length_codons = rng.gen_range(1..=10);
-        let mut dna = Vec::with_capacity(dna_length_codons * 3);
+    fn new_random(_max_force: u32) -> Self {
+        // let mut rng = thread_rng();
+        // let dna_length_codons = rng.gen_range(1..=10);
+        // let mut dna = Vec::with_capacity(dna_length_codons * 3);
 
-        for _ in 0..dna_length_codons {
-            let base1 = rng.gen_range(0..=1);
-            let mut base2 = rng.gen_range(0..=max_force);
+        // for _ in 0..dna_length_codons {
+        //     let base1 = rng.gen_range(0..=1);
+        //     let mut base2 = rng.gen_range(0..=max_force);
 
-            while base1 == 1 && base2 == FOOD_FORCE as u32 {
-                base2 = rng.gen_range(0..=max_force);
-            }
+        //     while base1 == 1 && base2 == FOOD_FORCE as u32 {
+        //         base2 = rng.gen_range(0..=max_force);
+        //     }
 
-            let base3 = if base1 == 0 {
-                rng.gen_range(-1.0..=1.0)
-            } else {
-                rng.gen_range(0.1..=1.0)
-            };
+        //     let base3 = if base1 == 0 {
+        //         rng.gen_range(-1.0..=1.0)
+        //     } else {
+        //         rng.gen_range(0.1..=1.0)
+        //     };
 
-            dna.extend_from_slice(&[base1 as f32, base2 as f32, base3]);
-        }
+        //     dna.extend_from_slice(&[base1 as f32, base2 as f32, base3]);
+        // }
+
+        let dna = vec![0.0, FOOD_FORCE as f32, 1.0]; // Food chaser
 
         DNA(dna)
     }
@@ -131,7 +133,7 @@ impl DNA {
                     chunk[2] = chunk[2].max(0.0);
                 }
                 2..=8 => chunk[2] = chunk[2].max(0.0),
-                9 => chunk[2] = chunk[2].max(DEFAULT_FOOD_REQUIRED_TO_REPLICATE * 1.1),
+                9 => chunk[2] = chunk[2].max(STARTING_FOOD_CELL * 1.1),
                 _ => {}
             }
         }
@@ -316,7 +318,7 @@ impl Cell {
     }
 
     pub fn consume_replication_food(&mut self) {
-        self.food -= self.food_to_replicate * 0.5;
+        self.food -= self.food_to_replicate * FOOD_RETENTION_REPLICATION;
     }
 
     pub fn eat_food(&mut self, food: f32) {
@@ -337,8 +339,8 @@ pub struct CellManager {
     food: FxHashMap<usize, (f32, f32, f32)>,
     cells_grid: Vec<FxHashSet<usize>>,
     food_grid: Vec<FxHashSet<usize>>,
-    pub next_cell_id: usize,
-    pub next_food_id: usize,
+    next_cell_id: usize,
+    next_food_id: usize,
     _num_cells: usize,
 }
 
@@ -557,7 +559,7 @@ impl CellManager {
                     let cell = self.cells.get(&id).unwrap();
                     (cell.x, cell.y)
                 };
-                self.add_food(x, y, STARTING_FOOD_CELL);
+                self.add_food(x, y, DEFAULT_FOOD_VALUE_PER_CELL);
                 self.remove_cell(id);
                 continue;
             }
