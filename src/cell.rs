@@ -4,7 +4,7 @@ use rustc_hash::FxHashMap;
 use crate::config::*;
 
 #[derive(Clone)]
-struct DNA(Vec<f32>);
+pub struct DNA(Vec<f32>);
 
 impl DNA {
     fn new_random(max_force: u32) -> Self {
@@ -118,6 +118,7 @@ impl DNA {
     }
 }
 
+#[derive(Clone)]
 pub struct Cell {
     x: f32,
     y: f32,
@@ -154,8 +155,8 @@ impl Cell {
 
     pub fn new_random(max_force: u32) -> Self {
         let mut rng = thread_rng();
-        let x = rng.gen_range(0.0..=GAME_SIZE as f32);
-        let y = rng.gen_range(0.0..=GAME_SIZE as f32);
+        let x = rng.gen_range(0.0..GAME_SIZE as f32);
+        let y = rng.gen_range(0.0..GAME_SIZE as f32);
         let dna = DNA::new_random(max_force);
 
         Self::new(x, y, dna, FxHashMap::default())
@@ -282,6 +283,10 @@ impl Cell {
 
     pub fn eat_food(&mut self, food: f32) {
         self.food += food;
+    }
+
+    pub fn remove_food(&mut self, food: f32) {
+        self.food -= food;
     }
 
     pub fn get_emissions(&self) -> &Vec<(u16, f32)> {

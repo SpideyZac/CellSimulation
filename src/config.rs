@@ -1,5 +1,5 @@
 // Game Constants
-pub const MAX_CELLS: u16 = 1000;
+pub const STARTING_CELLS: u16 = 1000;
 pub const GAME_SIZE: u16 = 1000;
 pub const GAME_SQUARE_SIZE: u16 = 10;
 pub const STARTING_FOOD_SPAWNED: u16 = 500;
@@ -10,7 +10,7 @@ pub const TOXIN_FORCE: u8 = 1;
 pub const DEFAULT_FOOD_VALUE_PER_FOOD: f32 = 15.0;
 
 // Cell Constants
-pub const CELL_SIZE_SQ: u16 = 4;
+pub const CELL_SIZE_SQ: f32 = 4.0;
 pub const DEFAULT_MUTATION_RATE: f32 = 0.01;
 pub const PRIMARY_DEFAULT_MUTATION_RATE: f32 = 0.001;
 pub const SECONDARY_DEFAULT_MUTATION_RATE: f32 = 0.10;
