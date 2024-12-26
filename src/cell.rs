@@ -84,13 +84,25 @@ impl DNA {
 
     fn handle_frameshift(&self, dna: &mut Vec<f32>, delete_rate: f32, add_rate: f32) {
         let mut rng = thread_rng();
-        let r = rng.gen_range(0.0..=1.0);
 
-        if r < delete_rate {
-            let index = rng.gen_range(0..=(dna.len() / 3 - 1)) * 3;
+        if dna.len() > 0 {
+            let r = rng.gen_range(0.0..=1.0);
 
-            dna.drain(index..index + 3);
-        } else if r < add_rate {
+            if r < delete_rate {
+                let index = rng.gen_range(0..=(dna.len() / 3 - 1)) * 3;
+
+                dna.drain(index..index + 3);
+            } else if r < add_rate {
+                let index = rng.gen_range(0..=(dna.len() / 3)) * 3;
+                let new_codon = [
+                    rng.gen_range(0..=9) as f32,
+                    rng.gen_range(-10.0..=10.0),
+                    rng.gen_range(-1.0..=1.0),
+                ];
+
+                dna.splice(index..index, new_codon.iter().copied());
+            }
+        } else {
             let index = rng.gen_range(0..=(dna.len() / 3)) * 3;
             let new_codon = [
                 rng.gen_range(0..=9) as f32,
@@ -119,7 +131,7 @@ impl DNA {
                     chunk[2] = chunk[2].max(0.0);
                 }
                 2..=8 => chunk[2] = chunk[2].max(0.0),
-                9 => chunk[2] = chunk[2].max(DEFAULT_FOOD_REQUIRED_TO_REPLICATE * 0.5),
+                9 => chunk[2] = chunk[2].max(DEFAULT_FOOD_REQUIRED_TO_REPLICATE * 1.1),
                 _ => {}
             }
         }
@@ -253,6 +265,18 @@ impl Cell {
         self.x = self.prev_x;
         self.y = self.prev_y;
         self.next_forces.clear();
+
+        if self.x < 0.0 {
+            self.x = 0.0;
+        } else if self.x >= GAME_SIZE as f32 {
+            self.x = GAME_SIZE as f32 - 1.0;
+        }
+
+        if self.y < 0.0 {
+            self.y = 0.0;
+        } else if self.y >= GAME_SIZE as f32 {
+            self.y = GAME_SIZE as f32 - 1.0;
+        }
     }
 
     fn calculate_food_used(&self) -> f32 {
@@ -269,7 +293,7 @@ impl Cell {
             }
         }
 
-        food_used
+        food_used + FOOD_USED_PER_TURN
     }
 
     fn update_food(&mut self) {
@@ -292,7 +316,7 @@ impl Cell {
     }
 
     pub fn consume_replication_food(&mut self) {
-        self.food -= self.food_to_replicate;
+        self.food -= self.food_to_replicate * 0.5;
     }
 
     pub fn eat_food(&mut self, food: f32) {
@@ -313,8 +337,8 @@ pub struct CellManager {
     food: FxHashMap<usize, (f32, f32, f32)>,
     cells_grid: Vec<FxHashSet<usize>>,
     food_grid: Vec<FxHashSet<usize>>,
-    next_cell_id: usize,
-    next_food_id: usize,
+    pub next_cell_id: usize,
+    pub next_food_id: usize,
     _num_cells: usize,
 }
 
@@ -439,104 +463,131 @@ impl CellManager {
     }
 
     fn emit_forces(&mut self) {
-        for (_, (x, y, food)) in self.food.iter() {
+        let food_iter = self.food.iter();
+        for (_, (x, y, food)) in food_iter {
             let neighbors = self.get_cell_neighbors(*x, *y, usize::MAX);
-
             for neighbor_id in neighbors {
-                let neighbor = self.cells.get_mut(&neighbor_id).unwrap();
-                neighbor.add_force(FOOD_FORCE as u16, *food, *x, *y);
+                if let Some(neighbor) = self.cells.get_mut(&neighbor_id) {
+                    neighbor.add_force(FOOD_FORCE as u16, *food, *x, *y);
+                }
             }
         }
 
-        let indexes = self.cells.keys().cloned().collect::<Vec<_>>();
-        for index in indexes {
-            let cell = self.cells.get(&index).unwrap();
-            let emissions = cell.get_emissions().clone();
-            let (x, y) = (cell.x, cell.y);
+        let cell_data: Vec<_> = self
+            .cells
+            .iter()
+            .map(|(id, cell)| (*id, cell.get_emissions().clone(), cell.x, cell.y))
+            .collect();
 
+        for (id, emissions, x, y) in cell_data {
             for (type_, emission) in emissions {
-                for neighbor_id in self.get_cell_neighbors(x, y, index) {
-                    let neighbor = self.cells.get_mut(&neighbor_id).unwrap();
-                    neighbor.add_force(type_, emission, x, y);
-
-                    if type_ == TOXIN_FORCE as u16 {
-                        neighbor.remove_food(emission * FOOD_USED_PER_UNIT_TOXIN_EMITTED);
+                for neighbor_id in self.get_cell_neighbors(x, y, id) {
+                    if let Some(neighbor) = self.cells.get_mut(&neighbor_id) {
+                        neighbor.add_force(type_, emission, x, y);
+                        if type_ == TOXIN_FORCE as u16 {
+                            neighbor.remove_food(emission * FOOD_USED_PER_UNIT_TOXIN_EMITTED);
+                        }
                     }
                 }
             }
         }
     }
 
-    fn update_cell(&mut self, index: &usize) {
-        let cell = self.cells.get(index).unwrap();
-        let (prev_x, prev_y) = (cell.x, cell.y);
-        let cell = self.cells.get_mut(index).unwrap();
-        cell.update();
-        let (x, y) = (cell.x, cell.y);
-        self.move_cell(*index, x, y, prev_x, prev_y);
+    fn update_cell(&mut self, index: &usize) -> bool {
+        let (prev_x, prev_y) = {
+            let cell = self.cells.get(index).unwrap();
+            (cell.x, cell.y)
+        };
+
+        let still_alive = {
+            let cell = self.cells.get_mut(index).unwrap();
+            cell.update();
+            !cell.is_dead()
+        };
+
+        if still_alive {
+            let (x, y) = {
+                let cell = self.cells.get(index).unwrap();
+                (cell.x, cell.y)
+            };
+            self.move_cell(*index, x, y, prev_x, prev_y);
+        }
+
+        still_alive
     }
 
     fn consume_food(&mut self, index: &usize) {
-        let cell = self.cells.get(index).unwrap();
-        let (x, y) = (cell.x, cell.y);
-        let neighbors = self.get_food_neighbors(x, y);
+        let (cell_x, cell_y) = {
+            let cell = self.cells.get(index).unwrap();
+            (cell.x, cell.y)
+        };
 
-        for neighbor_id in neighbors {
-            let (nx, ny, food) = self.food.get(&neighbor_id).unwrap();
-            let dx = nx - x;
-            let dy = ny - y;
-            let distance_sq = dx * dx + dy * dy;
+        let food_to_consume: Vec<_> = self
+            .get_food_neighbors(cell_x, cell_y)
+            .into_iter()
+            .filter_map(|food_id| {
+                self.food.get(&food_id).and_then(|&(fx, fy, food_val)| {
+                    let dx = fx - cell_x;
+                    let dy = fy - cell_y;
+                    if dx * dx + dy * dy < CELL_SIZE_SQ {
+                        Some((food_id, food_val))
+                    } else {
+                        None
+                    }
+                })
+            })
+            .collect();
 
-            if distance_sq < CELL_SIZE_SQ {
-                let cell = self.cells.get_mut(index).unwrap();
-                cell.eat_food(*food);
-                self.remove_food(neighbor_id);
+        for (food_id, food_val) in food_to_consume {
+            if let Some(cell) = self.cells.get_mut(index) {
+                cell.eat_food(food_val);
             }
-        }
-    }
-
-    fn kill_dead(&mut self, index: &usize) -> bool {
-        let cell = self.cells.get(index).unwrap();
-        if cell.is_dead() {
-            self.add_food(cell.x, cell.y, STARTING_FOOD_CELL);
-            self.remove_cell(*index);
-            return true;
-        }
-        false
-    }
-
-    fn attempt_replication(&mut self, index: &usize) {
-        let cell = self.cells.get(index).unwrap();
-
-        if cell.can_replicate() {
-            let new_cell = cell.replicate();
-            self.add_cell(new_cell);
-            self.cells
-                .get_mut(index)
-                .unwrap()
-                .consume_replication_food();
-        }
-    }
-
-    fn create_new_food(&mut self) {
-        for _ in 0..FOOD_PER_TURN {
-            self.create_random_food();
+            self.remove_food(food_id);
         }
     }
 
     pub fn update(&mut self) {
         self.emit_forces();
 
-        let cell_ids = self.cells.keys().cloned().collect::<Vec<_>>();
+        let cell_ids: Vec<_> = self.cells.keys().copied().collect();
+
         for id in cell_ids {
-            self.update_cell(&id);
-            self.consume_food(&id);
-            if self.kill_dead(&id) {
+            if !self.update_cell(&id) {
+                let (x, y) = {
+                    let cell = self.cells.get(&id).unwrap();
+                    (cell.x, cell.y)
+                };
+                self.add_food(x, y, STARTING_FOOD_CELL);
+                self.remove_cell(id);
                 continue;
             }
-            self.attempt_replication(&id);
+
+            self.consume_food(&id);
+
+            let should_replicate = self
+                .cells
+                .get(&id)
+                .map(|cell| cell.can_replicate())
+                .unwrap_or(false);
+
+            if should_replicate && self.cells.len() < MAX_CELLS as usize {
+                let new_cell = {
+                    let cell = self.cells.get(&id).unwrap();
+                    cell.replicate()
+                };
+                self.add_cell(new_cell);
+                if let Some(cell) = self.cells.get_mut(&id) {
+                    cell.consume_replication_food();
+                }
+            }
         }
 
-        self.create_new_food();
+        for _ in 0..FOOD_PER_TURN {
+            self.create_random_food();
+        }
+    }
+
+    pub fn get_cells(&self) -> &FxHashMap<usize, Cell> {
+        &self.cells
     }
 }
