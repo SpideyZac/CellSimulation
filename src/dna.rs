@@ -41,7 +41,11 @@ impl From<u8> for PrimaryBases {
 pub struct DNA(Vec<(u8, u16, f32)>);
 
 impl DNA {
-    fn get_activated_codons(&self, initial_forces: FxHashMap<u16, f32>) -> Vec<usize> {
+    pub fn new() -> Self {
+        DNA(vec![(0, FOOD_FORCE, 1.0)])
+    }
+
+    pub fn get_activated_codons(&self, initial_forces: FxHashMap<u16, f32>) -> Vec<usize> {
         let mut activated_codons = Vec::with_capacity(self.0.len());
         for codon_index in 0..self.0.len() {
             activated_codons.push(codon_index);
@@ -61,13 +65,41 @@ impl DNA {
         activated_codons
     }
 
-    pub fn new() -> Self {
-        DNA(vec![(0, FOOD_FORCE, 1.0)]) // 1.0 magnitude attraction to food
+    pub fn process_dna(
+        &self,
+        activated_codons: Vec<usize>,
+    ) -> (FxHashMap<u16, f32>, Vec<(u16, f32)>, f32) {
+        let mut attractions = FxHashMap::default();
+        let mut emissions: Vec<(u16, f32)> = Vec::new();
+        let mut food_to_replicate = DEFAULT_FOOD_TO_REPLICATE;
+
+        for codon_index in activated_codons {
+            match PrimaryBases::from(self.0[codon_index].0) {
+                PrimaryBases::Attraction => {
+                    let entry = attractions.entry(self.0[codon_index].1).or_insert(0.0);
+                    *entry += self.0[codon_index].2;
+                }
+                PrimaryBases::Emission => {
+                    if let Some(emission) = emissions
+                        .iter_mut()
+                        .find(|x| (**x).0 == self.0[codon_index].1)
+                    {
+                        emission.1 += self.0[codon_index].2;
+                    } else {
+                        emissions.push((self.0[codon_index].1, self.0[codon_index].2));
+                    }
+                }
+                PrimaryBases::ReplicationFood => food_to_replicate = self.0[codon_index].2,
+                _ => (),
+            }
+        }
+
+        (attractions, emissions, food_to_replicate)
     }
 
     fn get_mutation_rates(
         &self,
-        activated_codons: Vec<usize>,
+        activated_codons: &[usize],
     ) -> (f32, FxHashMap<usize, f32>, f32, f32, f32, f32) {
         let mut global_mutation_rate = DEFAULT_MUTATION_RATE;
         let mut individual_mutation_rates = FxHashMap::default();
@@ -77,6 +109,7 @@ impl DNA {
         let mut remove_codon_mutation_rate = DEFAULT_REMOVE_CODON_MUTATION_RATE;
 
         for codon_index in activated_codons {
+            let codon_index = *codon_index;
             match PrimaryBases::from(self.0[codon_index].0) {
                 PrimaryBases::GlobalMutationRate => global_mutation_rate = self.0[codon_index].2,
                 PrimaryBases::IndividualMutationRate => {
@@ -118,6 +151,9 @@ impl DNA {
                     self.0[codon_index].2 = 0.0;
                 }
             }
+            PrimaryBases::ReplicationFood => {
+                self.0[codon_index].2 = self.0[codon_index].2.max(CELL_STARTING_FOOD * 1.1)
+            }
             PrimaryBases::DisableCodon
             | PrimaryBases::GlobalMutationRate
             | PrimaryBases::IndividualMutationRate
@@ -154,7 +190,7 @@ impl DNA {
         }
     }
 
-    pub fn mutate(&mut self, activated_codons: Vec<usize>) {
+    pub fn mutate(&mut self, activated_codons: &[usize]) {
         let mut rng = thread_rng();
         let (
             global_mutation_rate,
