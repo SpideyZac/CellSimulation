@@ -212,7 +212,7 @@ impl DNA {
 
             let mutation_type = rng.gen_range(0.0..=1.0);
             if mutation_type <= primary_mutation_rate {
-                self.0[codon_index].0 = rng.gen_range(0..=9);
+                self.0[codon_index].0 = rng.gen_range(0..=10);
             } else if mutation_type <= secondary_mutation_rate {
                 self.0[codon_index].1 =
                     (self.0[codon_index].1 as i16 + rng.gen_range(-1..=1)).max(0) as u16;
