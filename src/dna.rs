@@ -38,6 +38,7 @@ impl From<u8> for PrimaryBases {
     }
 }
 
+#[derive(Clone)]
 pub struct DNA(Vec<(u8, u16, f32)>);
 
 impl DNA {
@@ -67,7 +68,7 @@ impl DNA {
 
     pub fn process_dna(
         &self,
-        activated_codons: Vec<usize>,
+        activated_codons: &[usize],
     ) -> (FxHashMap<u16, f32>, Vec<(u16, f32)>, f32, f32) {
         let mut attractions = FxHashMap::default();
         let mut emissions: Vec<(u16, f32)> = Vec::new();
@@ -75,6 +76,7 @@ impl DNA {
         let mut size = DEFAULT_CELL_SIZE;
 
         for codon_index in activated_codons {
+            let codon_index = *codon_index;
             match PrimaryBases::from(self.0[codon_index].0) {
                 PrimaryBases::Attraction => {
                     let entry = attractions.entry(self.0[codon_index].1).or_insert(0.0);
@@ -145,6 +147,10 @@ impl DNA {
     fn fix_broken_codon(&mut self, codon_index: usize) {
         match PrimaryBases::from(self.0[codon_index].0) {
             PrimaryBases::Emission => {
+                if self.0[codon_index].1 == FOOD_FORCE {
+                    self.0[codon_index].1 = TOXIN_FORCE;
+                }
+
                 if self.0[codon_index].1 == TOXIN_FORCE && self.0[codon_index].2 > 2.0 {
                     self.0[codon_index].2 = 2.0;
                 }
