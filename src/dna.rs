@@ -107,6 +107,29 @@ impl DNA {
         )
     }
 
+    fn fix_broken_codon(&mut self, codon_index: usize) {
+        match PrimaryBases::from(self.0[codon_index].0) {
+            PrimaryBases::Emission => {
+                if self.0[codon_index].1 == TOXIN_FORCE && self.0[codon_index].2 > 2.0 {
+                    self.0[codon_index].2 = 2.0;
+                }
+
+                if self.0[codon_index].2 < 0.0 {
+                    self.0[codon_index].2 = 0.0;
+                }
+            }
+            PrimaryBases::DisableCodon
+            | PrimaryBases::GlobalMutationRate
+            | PrimaryBases::IndividualMutationRate
+            | PrimaryBases::PrimaryMutationRate
+            | PrimaryBases::SecondaryMutationRate
+            | PrimaryBases::AddCodonMutationRate
+            | PrimaryBases::RemoveCodonMutationRate
+            | PrimaryBases::CellSize => self.0[codon_index].2 = self.0[codon_index].2.max(0.0),
+            _ => (),
+        };
+    }
+
     fn frameshift_mutation(
         &mut self,
         rng: &mut ThreadRng,
@@ -124,34 +147,10 @@ impl DNA {
                     rng.gen_range(-10.0..=10.0),
                 ),
             );
+            self.fix_broken_codon(codon_index);
         } else if r <= remove_codon_mutation_rate && self.0.len() > 0 {
             let codon_index = rng.gen_range(0..self.0.len());
             self.0.remove(codon_index);
-        }
-    }
-
-    fn fix_broken_codons(&mut self) {
-        for codon_index in 0..self.0.len() {
-            match PrimaryBases::from(self.0[codon_index].0) {
-                PrimaryBases::Emission => {
-                    if self.0[codon_index].1 == TOXIN_FORCE && self.0[codon_index].2 > 2.0 {
-                        self.0[codon_index].2 = 2.0;
-                    }
-
-                    if self.0[codon_index].2 < 0.0 {
-                        self.0[codon_index].2 = 0.0;
-                    }
-                }
-                PrimaryBases::DisableCodon
-                | PrimaryBases::GlobalMutationRate
-                | PrimaryBases::IndividualMutationRate
-                | PrimaryBases::PrimaryMutationRate
-                | PrimaryBases::SecondaryMutationRate
-                | PrimaryBases::AddCodonMutationRate
-                | PrimaryBases::RemoveCodonMutationRate
-                | PrimaryBases::CellSize => self.0[codon_index].2 = self.0[codon_index].2.max(0.0),
-                _ => (),
-            };
         }
     }
 
@@ -184,6 +183,7 @@ impl DNA {
             } else {
                 self.0[codon_index].2 += rng.gen_range(-1.0..=1.0);
             }
+            self.fix_broken_codon(codon_index);
         }
 
         self.frameshift_mutation(
@@ -191,6 +191,5 @@ impl DNA {
             add_codon_mutation_rate,
             remove_codon_mutation_rate,
         );
-        self.fix_broken_codons();
     }
 }
