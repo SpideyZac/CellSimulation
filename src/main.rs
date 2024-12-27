@@ -1,3 +1,4 @@
+mod cell;
 mod config;
 mod dna;
 mod id;

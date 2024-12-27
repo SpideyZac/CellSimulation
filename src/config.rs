@@ -1,3 +1,5 @@
+pub const GAME_SIZE: usize = 1000;
+
 pub const FOOD_FORCE: u16 = 0;
 pub const TOXIN_FORCE: u16 = 1;
 
@@ -7,7 +9,6 @@ pub const DEFAULT_SECONDARY_MUTATION_RATE: f32 = 0.01;
 pub const DEFAULT_ADD_CODON_MUTATION_RATE: f32 = 0.001;
 pub const DEFAULT_REMOVE_CODON_MUTATION_RATE: f32 = 0.0001;
 
+pub const CELL_STARTING_FOOD: f32 = 50.0;
 pub const DEFAULT_FOOD_TO_REPLICATE: f32 = 65.0;
 pub const DEFAULT_CELL_SIZE: f32 = 4.0;
-
-pub const CELL_STARTING_FOOD: f32 = 50.0;

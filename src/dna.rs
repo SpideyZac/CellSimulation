@@ -68,10 +68,11 @@ impl DNA {
     pub fn process_dna(
         &self,
         activated_codons: Vec<usize>,
-    ) -> (FxHashMap<u16, f32>, Vec<(u16, f32)>, f32) {
+    ) -> (FxHashMap<u16, f32>, Vec<(u16, f32)>, f32, f32) {
         let mut attractions = FxHashMap::default();
         let mut emissions: Vec<(u16, f32)> = Vec::new();
         let mut food_to_replicate = DEFAULT_FOOD_TO_REPLICATE;
+        let mut size = DEFAULT_CELL_SIZE;
 
         for codon_index in activated_codons {
             match PrimaryBases::from(self.0[codon_index].0) {
@@ -90,11 +91,12 @@ impl DNA {
                     }
                 }
                 PrimaryBases::ReplicationFood => food_to_replicate = self.0[codon_index].2,
+                PrimaryBases::CellSize => size = self.0[codon_index].2,
                 _ => (),
             }
         }
 
-        (attractions, emissions, food_to_replicate)
+        (attractions, emissions, food_to_replicate, size)
     }
 
     fn get_mutation_rates(
