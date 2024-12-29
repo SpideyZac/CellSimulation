@@ -76,6 +76,7 @@ impl CellManager {
         if let Some(cell) = self.cells.remove(&id) {
             let index = self.get_cell_grid_index(cell.x, cell.y);
             self.cell_grid[index].remove(&id);
+            self.cell_id_manager.restore_id(id);
         }
     }
 
@@ -83,6 +84,7 @@ impl CellManager {
         if let Some(food) = self.food.remove(&id) {
             let index = self.get_cell_grid_index(food.0, food.1);
             self.food_grid[index].remove(&id);
+            self.food_id_manager.restore_id(id);
         }
     }
 

@@ -74,7 +74,7 @@ impl Cell {
             if *force == TOXIN_FORCE {
                 self.remove_food(*magnitude * FOOD_STOLEN_PER_TOXIN_UNIT);
             }
-            
+
             *self.last_forces.entry(*force).or_insert(0.0) += *magnitude;
 
             let x = self.x - force_x;
