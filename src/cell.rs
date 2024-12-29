@@ -71,21 +71,24 @@ impl Cell {
 
     pub fn add_forces(&mut self, forces: &[(u16, f32)], force_x: f32, force_y: f32) {
         for (force, magnitude) in forces {
+            if *force == TOXIN_FORCE {
+                self.remove_food(*magnitude * FOOD_STOLEN_PER_TOXIN_UNIT);
+            }
+            
             *self.last_forces.entry(*force).or_insert(0.0) += *magnitude;
 
             let x = self.x - force_x;
             let y = self.y - force_y;
 
             let distance_sq = x * x + y * y;
+            if distance_sq < 0.1 {
+                continue;
+            }
             let scaled_force =
                 *magnitude * *self.attractions.get(&force).unwrap_or(&0.0) / distance_sq;
 
             self.next_x += -x * scaled_force;
             self.next_y += -y * scaled_force;
-
-            if *force == TOXIN_FORCE {
-                self.remove_food(*magnitude * FOOD_STOLEN_PER_TOXIN_UNIT);
-            }
         }
     }
 
