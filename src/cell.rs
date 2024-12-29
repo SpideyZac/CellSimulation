@@ -118,12 +118,14 @@ impl Cell {
         self.remove_food(food_usage);
     }
 
-    pub fn update(&mut self) {
+    pub fn update(&mut self) -> (f32, f32) {
         let prev_x = self.x;
         let prev_y = self.y;
 
         self.update_pos();
         self.update_food(prev_x, prev_y);
+
+        (prev_x, prev_y)
     }
 
     pub fn replicate(&mut self, id: u64) -> Cell {
@@ -151,5 +153,9 @@ impl Cell {
 
     pub fn is_dead(&self) -> bool {
         self.food <= 0.0
+    }
+
+    pub fn get_emissions(&self) -> Vec<(u16, f32)> {
+        self.emissions.clone()
     }
 }
