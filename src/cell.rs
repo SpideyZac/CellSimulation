@@ -93,6 +93,14 @@ impl Cell {
     }
 
     fn update_pos(&mut self) {
+        if self.next_x < 0.0 || self.next_x >= GAME_SIZE as f32 {
+            self.next_x = self.x;
+        }
+
+        if self.next_y < 0.0 || self.next_y >= GAME_SIZE as f32 {
+            self.next_y = self.y;
+        }
+
         self.x = self.next_x;
         self.y = self.next_y;
     }
@@ -113,7 +121,7 @@ impl Cell {
             }
         }
 
-        food_usage
+        food_usage + FOOD_USED_PER_FRAME
     }
 
     fn update_food(&mut self, prev_x: f32, prev_y: f32) {

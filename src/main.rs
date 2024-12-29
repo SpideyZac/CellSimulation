@@ -4,21 +4,25 @@ mod config;
 mod dna;
 mod id;
 
-use std::fs::File;
-
 fn main() {
-    let guard = pprof::ProfilerGuard::new(1000).unwrap();
+    // let guard = pprof::ProfilerGuard::new(1000).unwrap();
 
     let mut cell_manager = cell_manager::CellManager::new();
     cell_manager.init();
 
-    for _ in 0..1000 {
+    for i in 0..10000 {
         cell_manager.update();
+        let len = cell_manager.get_cells().len();
+        println!("iteration: {} cells: {}", i, len);
+        if len == 0 {
+            cell_manager = cell_manager::CellManager::new();
+            cell_manager.init();
+        }
     }
 
-    if let Ok(report) = guard.report().build() {
-        println!("report: {:?}", &report);
-        let file = File::create("flamegraph.svg").unwrap();
-        report.flamegraph(file).unwrap();
-    };
+    // if let Ok(report) = guard.report().build() {
+    //     // println!("report: {:?}", &report);
+    //     let file = std::fs::File::create("flamegraph.svg").unwrap();
+    //     report.flamegraph(file).unwrap();
+    // };
 }

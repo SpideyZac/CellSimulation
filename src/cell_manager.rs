@@ -135,9 +135,7 @@ impl CellManager {
 
                 if x >= 0 && x < GRID_CELL_SIZE as i64 && y >= 0 && y < GRID_CELL_SIZE as i64 {
                     let neighbor_index = (y * GRID_CELL_SIZE as i64 + x) as usize;
-                    for &food_id in &self.food_grid[neighbor_index] {
-                        neighbor_food.push(food_id);
-                    }
+                    neighbor_food.extend(self.food_grid[neighbor_index].iter().copied());
                 }
             }
         }
@@ -151,7 +149,7 @@ impl CellManager {
             let neighbors = self.get_neighbor_cells(u64::MAX, x, y);
             for neighbor in neighbors {
                 if let Some(cell) = self.cells.get_mut(&neighbor) {
-                    if cell.x * cell.x + cell.y * cell.y < FORCE_MAX_RANGE_SQ {
+                    if (cell.x - x).powi(2) + (cell.y - y).powi(2) < FORCE_MAX_RANGE_SQ {
                         cell.add_forces(&[(FOOD_FORCE, food)], x, y);
                     }
                 }
@@ -165,7 +163,7 @@ impl CellManager {
             let neighbors = self.get_neighbor_cells(id, x, y);
             for neighbor in neighbors {
                 if let Some(neighbor) = self.cells.get_mut(&neighbor) {
-                    if neighbor.x * neighbor.x + neighbor.y * neighbor.y < FORCE_MAX_RANGE_SQ {
+                    if (neighbor.x - x).powi(2) + (neighbor.y - y).powi(2) < FORCE_MAX_RANGE_SQ {
                         neighbor.add_forces(&emissions, x, y);
                     }
                 }
@@ -180,7 +178,7 @@ impl CellManager {
         for neighbor in neighbors {
             if let Some(food) = self.food.get(&neighbor) {
                 let (food_x, food_y, food) = *food;
-                if (x - food_x).powi(2).abs() + (y - food_y).powi(2).abs() <= size {
+                if (x - food_x).powi(2) + (y - food_y).powi(2) <= size {
                     let cell = self.cells.get_mut(&cell_id).unwrap();
                     cell.add_food(food);
                     self.remove_food(neighbor);
@@ -232,5 +230,9 @@ impl CellManager {
             let food = DEFAULT_FOOD_VALUE;
             self.add_food(x, y, food);
         }
+    }
+
+    pub fn get_cells(&self) -> &FxHashMap<u64, Cell> {
+        &self.cells
     }
 }
