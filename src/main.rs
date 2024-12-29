@@ -5,7 +5,7 @@ mod dna;
 mod id;
 
 fn main() {
-    // let guard = pprof::ProfilerGuard::new(1000).unwrap();
+    let guard = pprof::ProfilerGuard::new(10000).unwrap();
 
     let mut cell_manager = cell_manager::CellManager::new();
     cell_manager.init();
@@ -20,9 +20,9 @@ fn main() {
         }
     }
 
-    // if let Ok(report) = guard.report().build() {
-    //     // println!("report: {:?}", &report);
-    //     let file = std::fs::File::create("flamegraph.svg").unwrap();
-    //     report.flamegraph(file).unwrap();
-    // };
+    if let Ok(report) = guard.report().build() {
+        // println!("report: {:?}", &report);
+        let file = std::fs::File::create("flamegraph.svg").unwrap();
+        report.flamegraph(file).unwrap();
+    };
 }
