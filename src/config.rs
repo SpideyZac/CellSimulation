@@ -1,3 +1,6 @@
+pub const ITERATIONS: usize = 100000;
+pub const PRINT_DETAILS_AFTER_FRAMES: usize = 100;
+
 pub const GAME_SIZE: usize = 100;
 pub const GRID_CELL_SIZE: usize = 10;
 

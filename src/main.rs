@@ -4,16 +4,20 @@ mod config;
 mod dna;
 mod id;
 
+use config::*;
+
 fn main() {
     // let guard = pprof::ProfilerGuard::new(10000).unwrap();
 
     let mut cell_manager = cell_manager::CellManager::new();
     cell_manager.init();
 
-    for i in 0..100000 {
+    for i in 0..ITERATIONS {
         cell_manager.update();
         let len = cell_manager.get_cells().len();
-        println!("iteration: {} cells: {}", i, len);
+        if i % PRINT_DETAILS_AFTER_FRAMES == 0 {
+            println!("iteration: {} cells: {}", i, len);
+        }
         if len == 0 {
             cell_manager = cell_manager::CellManager::new();
             cell_manager.init();
