@@ -14,10 +14,32 @@ pub struct CellManager {
     cell_id_manager: IdManager,
     food_id_manager: IdManager,
     _num_cells: usize,
+    _relation_matrix: Vec<Vec<usize>>,
 }
 
 impl CellManager {
     pub fn new() -> Self {
+        let mut _relation_matrix = vec![vec![]; GRID_CELL_SIZE * GRID_CELL_SIZE];
+        let _num_cells = GAME_SIZE / GRID_CELL_SIZE;
+
+        for y in 0.._num_cells {
+            for x in 0.._num_cells {
+                let index = y * _num_cells + x;
+                let mut neighbors = vec![];
+                for dy in -1..=1 {
+                    for dx in -1..=1 {
+                        let nx = x as i32 + dx;
+                        let ny = y as i32 + dy;
+                        if nx >= 0 && nx < _num_cells as i32 && ny >= 0 && ny < _num_cells as i32 {
+                            neighbors.push((ny as usize) * _num_cells + nx as usize);
+                        }
+                    }
+                }
+
+                _relation_matrix[index] = neighbors;
+            }
+        }
+
         Self {
             cells: FxHashMap::default(),
             food: FxHashMap::default(),
@@ -31,7 +53,8 @@ impl CellManager {
             ],
             cell_id_manager: IdManager::new(),
             food_id_manager: IdManager::new(),
-            _num_cells: GAME_SIZE / GRID_CELL_SIZE,
+            _num_cells,
+            _relation_matrix,
         }
     }
 
@@ -98,73 +121,39 @@ impl CellManager {
         }
     }
 
-    fn get_neighbor_cells(&self, id: u64, x: f32, y: f32) -> Vec<u64> {
-        let mut neighbor_cells = Vec::new();
-        let index = self.get_cell_grid_index(x, y);
-
-        let x_factor = (index % GRID_CELL_SIZE) as i64;
-        let y_factor = (index / GRID_CELL_SIZE) as i64;
-
-        for i in 0..3 {
-            for j in 0..3 {
-                let x = x_factor + i - 1;
-                let y = y_factor + j - 1;
-
-                if x >= 0 && x < GRID_CELL_SIZE as i64 && y >= 0 && y < GRID_CELL_SIZE as i64 {
-                    let neighbor_index = (y * GRID_CELL_SIZE as i64 + x) as usize;
-                    neighbor_cells.extend(self.cell_grid[neighbor_index].iter().copied());
-                }
-            }
-        }
-
-        neighbor_cells.retain(|&cell_id| cell_id != id);
-        neighbor_cells
-    }
-
-    fn get_neighbor_food(&self, x: f32, y: f32) -> Vec<u64> {
-        let mut neighbor_food = Vec::new();
-        let index = self.get_cell_grid_index(x, y);
-
-        let x_factor = (index % GRID_CELL_SIZE) as i64;
-        let y_factor = (index / GRID_CELL_SIZE) as i64;
-
-        for i in 0..3 {
-            for j in 0..3 {
-                let x = x_factor + i - 1;
-                let y = y_factor + j - 1;
-
-                if x >= 0 && x < GRID_CELL_SIZE as i64 && y >= 0 && y < GRID_CELL_SIZE as i64 {
-                    let neighbor_index = (y * GRID_CELL_SIZE as i64 + x) as usize;
-                    neighbor_food.extend(self.food_grid[neighbor_index].iter().copied());
-                }
-            }
-        }
-
-        neighbor_food
-    }
-
-    fn emit_forces(&mut self) {
+    fn emit_forces(&mut self, cell_keys: &Vec<u64>) {
         for (_, food) in self.food.iter() {
             let (x, y, food) = *food;
-            let neighbors = self.get_neighbor_cells(u64::MAX, x, y);
+            let index = self.get_cell_grid_index(x, y);
+            let neighbors = &self._relation_matrix[index];
             for neighbor in neighbors {
-                if let Some(cell) = self.cells.get_mut(&neighbor) {
-                    if (cell.x - x).powi(2) + (cell.y - y).powi(2) < FORCE_MAX_RANGE_SQ {
-                        cell.add_forces(&[(FOOD_FORCE, food)], x, y);
+                let cells = &self.cell_grid[*neighbor];
+                for cell_id in cells.iter() {
+                    if let Some(cell) = self.cells.get_mut(cell_id) {
+                        if (cell.x - x).powi(2) + (cell.y - y).powi(2) < FORCE_MAX_RANGE_SQ {
+                            cell.add_forces(&[(FOOD_FORCE, food)], x, y);
+                        }
                     }
                 }
             }
         }
 
         for index in 0..self.cells.len() {
-            let id = self.cells.keys().nth(index).unwrap();
+            let id = cell_keys[index];
             let cell = self.cells.get(&id).unwrap();
             let (id, x, y, emissions) = (cell.id, cell.x, cell.y, cell.get_emissions());
-            let neighbors = self.get_neighbor_cells(id, x, y);
+            let index = self.get_cell_grid_index(x, y);
+            let neighbors = &self._relation_matrix[index];
             for neighbor in neighbors {
-                if let Some(neighbor) = self.cells.get_mut(&neighbor) {
-                    if (neighbor.x - x).powi(2) + (neighbor.y - y).powi(2) < FORCE_MAX_RANGE_SQ {
-                        neighbor.add_forces(&emissions, x, y);
+                let cells = &self.cell_grid[*neighbor];
+                for cell_id in cells.iter() {
+                    if *cell_id == id {
+                        continue;
+                    }
+                    if let Some(cell) = self.cells.get_mut(cell_id) {
+                        if (cell.x - x).powi(2) + (cell.y - y).powi(2) < FORCE_MAX_RANGE_SQ {
+                            cell.add_forces(&emissions, x, y);
+                        }
                     }
                 }
             }
@@ -174,14 +163,19 @@ impl CellManager {
     fn attempt_to_eat(&mut self, cell_id: u64) {
         let cell = self.cells.get(&cell_id).unwrap();
         let (x, y, size) = (cell.x, cell.y, cell.size);
-        let neighbors = self.get_neighbor_food(x, y);
+        let index = self.get_cell_grid_index(x, y);
+        let neighbors = self._relation_matrix[index].clone();
         for neighbor in neighbors {
-            if let Some(food) = self.food.get(&neighbor) {
-                let (food_x, food_y, food) = *food;
-                if (x - food_x).powi(2) + (y - food_y).powi(2) <= size {
-                    let cell = self.cells.get_mut(&cell_id).unwrap();
-                    cell.add_food(food);
-                    self.remove_food(neighbor);
+            let foods = self.food_grid[neighbor].clone();
+            for food_id in foods.iter() {
+                if let Some(food) = self.food.get(food_id) {
+                    let (food_x, food_y, food) = *food;
+                    if (x - food_x).powi(2) + (y - food_y).powi(2) <= size {
+                        let cell = self.cells.get_mut(&cell_id).unwrap();
+                        cell.add_food(food);
+                        let food_id = *food_id;
+                        self.remove_food(food_id);
+                    }
                 }
             }
         }
@@ -189,12 +183,12 @@ impl CellManager {
 
     pub fn update(&mut self) {
         let mut rng = thread_rng();
+        let cell_keys: Vec<u64> = self.cells.keys().copied().collect();
 
-        self.emit_forces();
+        self.emit_forces(&cell_keys);
 
-        let mut index = 0;
-        while index < self.cells.len() {
-            let id = *self.cells.keys().nth(index).unwrap();
+        for index in 0..self.cells.len() {
+            let id = cell_keys[index];
             let cell = self.cells.get_mut(&id).unwrap();
             let (prev_x, prev_y) = cell.update();
             let (x, y) = (cell.x, cell.y);
@@ -215,13 +209,10 @@ impl CellManager {
                 let new_cell = cell.replicate(id);
                 cell.reset();
                 self.add_cell(new_cell);
-
-                index += 1;
                 continue;
             }
 
             cell.reset();
-            index += 1;
         }
 
         for _ in 0..FOOD_ADDED_PER_FRAME {
