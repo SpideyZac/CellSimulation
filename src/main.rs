@@ -27,7 +27,8 @@ fn load_state(path: &str) -> std::io::Result<SimulationState> {
 }
 
 fn main() {
-    // let guard = pprof::ProfilerGuard::new(10000).unwrap();
+    #[cfg(feature = "profiling")]
+    let guard = pprof::ProfilerGuard::new(10000).unwrap();
 
     let running = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(true));
     let mut cell_manager = cell_manager::CellManager::new();
@@ -38,8 +39,10 @@ fn main() {
     });
 
     if let Ok(state) = load_state("state.json") {
+        println!("Loaded state from file");
         cell_manager.init_with_starting(state.cells, state.food);
     } else {
+        println!("No state file found, starting fresh");
         cell_manager.init();
     }
 
@@ -63,11 +66,13 @@ fn main() {
         food: cell_manager.get_food_cloned().into_values().collect(),
     };
 
+    println!("Saving state to file");
     save_state(&state, "state.json").unwrap();
 
-    // if let Ok(report) = guard.report().build() {
-    //     // println!("report: {:?}", &report);
-    //     let file = std::fs::File::create("flamegraph.svg").unwrap();
-    //     report.flamegraph(file).unwrap();
-    // };
+    #[cfg(feature = "profiling")]
+    if let Ok(report) = guard.report().build() {
+        println!("Writing flamegraph to flamegraph.svg");
+        let file = std::fs::File::create("flamegraph.svg").unwrap();
+        report.flamegraph(file).unwrap();
+    }
 }
