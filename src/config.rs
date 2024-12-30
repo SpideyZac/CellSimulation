@@ -1,3 +1,6 @@
+pub const WINDOW_WIDTH: usize = 500;
+pub const WINDOW_HEIGHT: usize = 500;
+
 pub const ITERATIONS: usize = 100000;
 pub const PRINT_DETAILS_AFTER_FRAMES: usize = 100;
 

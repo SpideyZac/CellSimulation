@@ -6,6 +6,89 @@ mod id;
 
 use config::*;
 
+#[cfg(feature = "graphics")]
+mod graphics {
+    use minifb::{Key, Window, WindowOptions};
+
+    use crate::config::*;
+
+    pub struct Graphics {
+        window: Window,
+        scale_factor_x: f32,
+        scale_factor_y: f32,
+    }
+
+    impl Graphics {
+        pub fn new() -> Self {
+            let window = Window::new(
+                "Cellular Automata",
+                WINDOW_WIDTH,
+                WINDOW_HEIGHT,
+                WindowOptions::default(),
+            )
+            .unwrap();
+            let scale_factor_x = WINDOW_WIDTH as f32 / GAME_SIZE as f32;
+            let scale_factor_y = WINDOW_HEIGHT as f32 / GAME_SIZE as f32;
+            Self {
+                window,
+                scale_factor_x,
+                scale_factor_y,
+            }
+        }
+
+        pub fn update(&mut self, cells: &Vec<crate::cell::Cell>, food: &Vec<(f32, f32, f32)>) {
+            let mut buffer: Vec<u32> = vec![0; WINDOW_WIDTH * WINDOW_HEIGHT];
+
+            for cell in cells {
+                let x = cell.get_x();
+                let y = cell.get_y();
+
+                let x = (x * self.scale_factor_x) as usize;
+                let y = (y * self.scale_factor_y) as usize;
+
+                let color = 0x00FF00;
+                buffer[y * WINDOW_WIDTH + x] = color;
+            }
+
+            for f in food {
+                let x = f.0;
+                let y = f.1;
+
+                let x = (x * self.scale_factor_x) as usize;
+                let y = (y * self.scale_factor_y) as usize;
+
+                let color = 0xFF0000;
+                buffer[y * WINDOW_WIDTH + x] = color;
+            }
+
+            self.window
+                .update_with_buffer(&buffer, WINDOW_WIDTH, WINDOW_HEIGHT)
+                .unwrap();
+        }
+
+        pub fn is_open(&self) -> bool {
+            self.window.is_open() && !self.window.is_key_down(Key::Escape)
+        }
+    }
+}
+
+#[cfg(not(feature = "graphics"))]
+mod graphics {
+    pub struct Graphics;
+
+    impl Graphics {
+        pub fn new() -> Self {
+            Self
+        }
+
+        pub fn update(&self, _cells: &Vec<crate::cell::Cell>, _food: &Vec<(f32, f32, f32)>) {}
+
+        pub fn is_open(&self) -> bool {
+            true
+        }
+    }
+}
+
 #[derive(serde::Serialize, serde::Deserialize)]
 struct SimulationState {
     cells: Vec<cell::Cell>,
@@ -46,15 +129,32 @@ fn main() {
         cell_manager.init();
     }
 
+    #[cfg(feature = "graphics")]
+    println!("Initiating graphics");
+    let mut graphics_win = graphics::Graphics::new();
+
     for i in 0..ITERATIONS {
         if !running.load(std::sync::atomic::Ordering::SeqCst) {
             break;
         }
         cell_manager.update();
-        let len = cell_manager.get_cells().len();
+        let cells = cell_manager.get_cells();
+        let len = cells.len();
         if i % PRINT_DETAILS_AFTER_FRAMES == 0 {
             println!("iteration: {} cells: {}", i, len);
         }
+
+        #[cfg(feature = "graphics")]
+        {
+            let cells = cell_manager.get_cells_cloned().into_values().collect();
+            let food = cell_manager.get_food_cloned().into_values().collect();
+
+            graphics_win.update(&cells, &food);
+            if !graphics_win.is_open() {
+                break;
+            }
+        }
+
         if len == 0 {
             cell_manager = cell_manager::CellManager::new();
             cell_manager.init();

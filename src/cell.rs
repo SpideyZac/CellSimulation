@@ -171,4 +171,12 @@ impl Cell {
     pub fn get_emissions(&self) -> Vec<(u16, f32)> {
         self.emissions.clone()
     }
+
+    pub fn get_x(&self) -> f32 {
+        self.x
+    }
+
+    pub fn get_y(&self) -> f32 {
+        self.y
+    }
 }
