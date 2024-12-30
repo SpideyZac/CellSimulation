@@ -5,7 +5,9 @@ use rustc_hash::FxHashMap;
 use crate::config::*;
 use crate::dna::DNA;
 
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct Cell {
+    #[serde(skip)]
     pub id: u64,
     dna: DNA,
     attractions: FxHashMap<u16, f32>,

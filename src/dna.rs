@@ -38,7 +38,7 @@ impl From<u8> for PrimaryBases {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct DNA(Vec<(u8, u16, f32)>);
 
 impl DNA {

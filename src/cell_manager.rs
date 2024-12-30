@@ -75,6 +75,18 @@ impl CellManager {
         }
     }
 
+    pub fn init_with_starting(&mut self, cells: Vec<Cell>, food: Vec<(f32, f32, f32)>) {
+        for mut cell in cells {
+            let id = self.cell_id_manager.get_id();
+            cell.id = id;
+            self.add_cell(cell);
+        }
+
+        for (x, y, food) in food {
+            self.add_food(x, y, food);
+        }
+    }
+
     fn get_cell_grid_index(&self, x: f32, y: f32) -> usize {
         let x = (x / GRID_CELL_SIZE as f32).floor() as usize;
         let y = (y / GRID_CELL_SIZE as f32).floor() as usize;
@@ -225,5 +237,13 @@ impl CellManager {
 
     pub fn get_cells(&self) -> &FxHashMap<u64, Cell> {
         &self.cells
+    }
+
+    pub fn get_cells_cloned(&self) -> FxHashMap<u64, Cell> {
+        self.cells.clone()
+    }
+
+    pub fn get_food_cloned(&self) -> FxHashMap<u64, (f32, f32, f32)> {
+        self.food.clone()
     }
 }
