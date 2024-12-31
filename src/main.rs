@@ -46,7 +46,7 @@ mod graphics {
                 let x = (x * self.scale_factor_x) as usize;
                 let y = (y * self.scale_factor_y) as usize;
 
-                let color = 0x00FF00;
+                let color = 0xFFFFFF;
                 buffer[y * WINDOW_WIDTH + x] = color;
             }
 
@@ -153,6 +153,8 @@ fn main() {
             if !graphics_win.is_open() {
                 break;
             }
+
+            std::thread::sleep(std::time::Duration::from_secs_f32(SLEEP_TIME));
         }
 
         if len == 0 {
