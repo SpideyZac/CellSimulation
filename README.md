@@ -149,47 +149,52 @@ cargo run --release --features "graphics profiling"
 The simulation configuration is defined in the `config.rs` file. Here are some key configuration parameters you can modify:
 
 - **Window Dimensions**:
-  - `WINDOW_WIDTH`: Width of the simulation window.
-  - `WINDOW_HEIGHT`: Height of the simulation window.
-  - `SLEEP_TIME`: Time to sleep between each rendered frame.
+    - `WINDOW_WIDTH`: Width of the simulation window.
+    - `WINDOW_HEIGHT`: Height of the simulation window.
+    - `SLEEP_TIME`: Time to sleep between each rendered frame.
 
 - **Simulation Parameters**:
-  - `ITERATIONS`: Number of iterations the simulation will run.
-  - `PRINT_DETAILS_AFTER_FRAMES`: Number of frames after which details are printed.
+    - `ITERATIONS`: Number of iterations the simulation will run.
+    - `PRINT_DETAILS_AFTER_FRAMES`: Number of frames after which details are printed.
 
 - **Game Size and Grid**:
   - `GAME_SIZE`: Size of the game environment.
   - `GRID_CELL_SIZE`: Size of each grid cell.
 
 - **Starting Conditions**:
-  - `STARTING_CELLS`: Number of starting cells.
-  - `STARTING_FOOD`: Number of starting food sources.
+    - `STARTING_CELLS`: Number of starting cells.
+    - `STARTING_FOOD`: Number of starting food sources.
 
-- **Food and Forces**:
-  - `DEFAULT_FOOD_VALUE`: Default value of food.
-  - `FOOD_ADDED_PER_FRAME`: Number of food sources added per frame.
-  - `FORCE_MAX_RANGE_SQ`: Maximum range of forces (squared). This must be less than or equal to `GRID_CELL_SIZE`
+- **Food**:
+    - `DEFAULT_FOOD_VALUE`: Default value of food.
+    - `DEFAULT_CELL_FOOD_VALUE`: Default value of food for a dead cell.
+    - `FOOD_ADDED_PER_FRAME`: Number of food sources added per frame. 
+
+- **Forces**:
+    - `FORCE_MAX_RANGE_SQ`: Maximum range of forces (squared). This must be less than or equal to `GRID_CELL_SIZE`
+    - `FOOD_FORCE`: The ID for the food force.
+    - `TOXIN_FORCE`: The ID for the toxin force.
 
 - **Cell Attributes**:
-  - `CELL_STARTING_FOOD`: Starting amount of food for each cell.
-  - `DEFAULT_FOOD_TO_REPLICATE`: Default amount of food required for replication.
-  - `DEFAULT_CELL_SIZE_SQ`: Default size of cells (squared).
-
-- **Mutation Rates**:
-  - `DEFAULT_MUTATION_RATE`: Default global mutation rate.
-  - `DEFAULT_PRIMARY_MUTATION_RATE`: Default mutation rate for primary bases.
-  - `DEFAULT_SECONDARY_MUTATION_RATE`: Default mutation rate for secondary bases.
-  - `DEFAULT_ADD_CODON_MUTATION_RATE`: Default rate for adding new codons.
-  - `DEFAULT_REMOVE_CODON_MUTATION_RATE`: Default rate for removing codons.
+    - `CELL_STARTING_FOOD`: Starting amount of food for each cell.
+ 
+- **Cell DNA Defaults**:
+    - `DEFAULT_MUTATION_RATE`: Default global mutation rate.
+    - `DEFAULT_PRIMARY_MUTATION_RATE`: Default mutation rate for primary bases.
+    - `DEFAULT_SECONDARY_MUTATION_RATE`: Default mutation rate for secondary bases.
+    - `DEFAULT_ADD_CODON_MUTATION_RATE`: Default rate for adding new codons.
+    - `DEFAULT_REMOVE_CODON_MUTATION_RATE`: Default rate for removing codons.
+    - `DEFAULT_FOOD_TO_REPLICATE`: Default amount of food required for replication.
+    - `DEFAULT_CELL_SIZE_SQ`: Default size of cells (squared).
 
 - **Food Usage**:
-  - `FOOD_USED_PER_FRAME`: Food used per frame.
-  - `FOOD_STOLEN_PER_TOXIN_UNIT`: Food stolen per toxin unit.
-  - `FOOD_USED_PER_UNIT_MOVED`: Food used per unit moved.
-  - `FOOD_USED_PER_SIZE_UNIT`: Food used per size unit.
-  - `FOOD_USED_PER_FORCE_EMITTED`: Food used per force emitted.
-  - `FOOD_USED_PER_TOXIN_UNIT_EMITTED`: Food used per toxin unit emitted.
-  - `FOOD_RETENTION_FROM_REPLICATION`: Food retention after replication.
+    - `FOOD_USED_PER_FRAME`: Food used per frame.
+    - `FOOD_STOLEN_PER_TOXIN_UNIT`: Food stolen per toxin unit.
+    - `FOOD_USED_PER_UNIT_MOVED`: Food used per unit moved.
+    - `FOOD_USED_PER_SIZE_UNIT`: Food used per size unit.
+    - `FOOD_USED_PER_FORCE_EMITTED`: Food used per force emitted.
+    - `FOOD_USED_PER_TOXIN_UNIT_EMITTED`: Food used per toxin unit emitted.
+    - `FOOD_RETENTION_FROM_REPLICATION`: Food retention after replication.
 
 To modify any of these parameters, simply edit the values in the `config.rs` file and rebuild the project.
 
