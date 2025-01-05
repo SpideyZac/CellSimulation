@@ -1,5 +1,8 @@
+#[allow(dead_code)]
 pub const WINDOW_WIDTH: usize = 500;
+#[allow(dead_code)]
 pub const WINDOW_HEIGHT: usize = 500;
+#[allow(dead_code)]
 pub const SLEEP_TIME: f32 = 0.1;
 
 pub const ITERATIONS: usize = 100000;

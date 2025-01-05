@@ -72,23 +72,6 @@ mod graphics {
     }
 }
 
-#[cfg(not(feature = "graphics"))]
-mod graphics {
-    pub struct Graphics;
-
-    impl Graphics {
-        pub fn new() -> Self {
-            Self
-        }
-
-        pub fn update(&self, _cells: &Vec<crate::cell::Cell>, _food: &Vec<(f32, f32, f32)>) {}
-
-        pub fn is_open(&self) -> bool {
-            true
-        }
-    }
-}
-
 #[derive(serde::Serialize, serde::Deserialize)]
 struct SimulationState {
     cells: Vec<cell::Cell>,
@@ -131,6 +114,7 @@ fn main() {
 
     #[cfg(feature = "graphics")]
     println!("Initiating graphics");
+    #[cfg(feature = "graphics")]
     let mut graphics_win = graphics::Graphics::new();
 
     for i in 0..ITERATIONS {

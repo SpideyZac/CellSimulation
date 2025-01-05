@@ -172,10 +172,12 @@ impl Cell {
         self.emissions.clone()
     }
 
+    #[allow(dead_code)]
     pub fn get_x(&self) -> f32 {
         self.x
     }
 
+    #[allow(dead_code)]
     pub fn get_y(&self) -> f32 {
         self.y
     }
