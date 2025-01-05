@@ -12,7 +12,6 @@ ctrlc = "3.4.5"
 minifb = { version = "0.27.0", optional = true }
 pprof = { version = "0.14.0", features = ["flamegraph"], optional = true }
 rand = "0.8.5"
-rayon = "1.10.0"
 rustc-hash = "2.1.0"
 serde = { version = "1.0.217", features = ["derive"] }
 serde_json = "1.0.134"
