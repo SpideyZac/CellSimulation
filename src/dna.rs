@@ -71,7 +71,7 @@ impl DNA {
         activated_codons: &[usize],
     ) -> (FxHashMap<u16, f32>, Vec<(u16, f32)>, f32, f32) {
         let mut attractions = FxHashMap::default();
-        let mut emissions: Vec<(u16, f32)> = Vec::new();
+        let mut emissions: Vec<(u16, f32)> = Vec::with_capacity(self.0.len());
         let mut food_to_replicate = DEFAULT_FOOD_TO_REPLICATE;
         let mut size = DEFAULT_CELL_SIZE_SQ;
 
