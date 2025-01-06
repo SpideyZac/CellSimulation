@@ -148,6 +148,9 @@ cargo run --release --features "graphics profiling"
 
 The simulation configuration is defined in the `config.rs` file. Here are some key configuration parameters you can modify:
 
+- **Save Files**:
+    - `STATE_PATH`: The path of the file to save and load the state from.
+
 - **Window Dimensions**:
     - `WINDOW_WIDTH`: Width of the simulation window.
     - `WINDOW_HEIGHT`: Height of the simulation window.

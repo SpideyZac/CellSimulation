@@ -1,3 +1,5 @@
+pub const STATE_PATH: &str = "state";
+
 #[allow(dead_code)]
 pub const WINDOW_WIDTH: usize = 1000;
 #[allow(dead_code)]

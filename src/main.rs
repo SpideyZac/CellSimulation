@@ -79,16 +79,15 @@ struct SimulationState {
 }
 
 fn save_state(state: &SimulationState, path: &str) -> std::io::Result<()> {
-    let file = std::fs::File::create(path)?;
-    let writer = std::io::BufWriter::new(file);
-    serde_json::to_writer(writer, state)?;
+    std::fs::File::create(path)?;
+    let buffer = bincode::serialize(state).unwrap();
+    std::fs::write(path, buffer)?;
     Ok(())
 }
 
 fn load_state(path: &str) -> std::io::Result<SimulationState> {
-    let file = std::fs::File::open(path)?;
-    let reader = std::io::BufReader::new(file);
-    let state = serde_json::from_reader(reader)?;
+    let buffer = std::fs::read(path)?;
+    let state = bincode::deserialize(&buffer).unwrap();
     Ok(state)
 }
 
@@ -104,7 +103,7 @@ fn main() {
         let _ = running_clone.store(false, std::sync::atomic::Ordering::SeqCst);
     });
 
-    if let Ok(state) = load_state("state.json") {
+    if let Ok(state) = load_state(STATE_PATH) {
         println!("Loaded state from file");
         cell_manager.init_with_starting(state.cells, state.food);
     } else {
@@ -154,7 +153,7 @@ fn main() {
     };
 
     println!("Saving state to file");
-    save_state(&state, "state.json").unwrap();
+    save_state(&state, STATE_PATH).unwrap();
 
     #[cfg(feature = "profiling")]
     if let Ok(report) = guard.report().build() {
