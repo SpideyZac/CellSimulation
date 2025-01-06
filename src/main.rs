@@ -142,6 +142,7 @@ fn main() {
         }
 
         if len == 0 {
+            println!("All cells are dead, restarting simulation");
             cell_manager = cell_manager::CellManager::new();
             cell_manager.init();
         }

@@ -13,25 +13,29 @@ pub struct CellManager {
     food_grid: Vec<FxHashSet<u64>>,
     cell_id_manager: IdManager,
     food_id_manager: IdManager,
-    _num_cells: usize,
+    _cells_per_axis: usize,
     _relation_matrix: Vec<Vec<usize>>,
 }
 
 impl CellManager {
     pub fn new() -> Self {
-        let mut _relation_matrix = vec![vec![]; GRID_CELL_SIZE * GRID_CELL_SIZE];
-        let _num_cells = GAME_SIZE / GRID_CELL_SIZE;
+        let _cells_per_axis = GAME_SIZE / GRID_CELL_SIZE;
+        let mut _relation_matrix = vec![vec![]; _cells_per_axis * _cells_per_axis];
 
-        for y in 0.._num_cells {
-            for x in 0.._num_cells {
-                let index = y * _num_cells + x;
+        for y in 0.._cells_per_axis {
+            for x in 0.._cells_per_axis {
+                let index = y * _cells_per_axis + x;
                 let mut neighbors = vec![];
                 for dy in -1..=1 {
                     for dx in -1..=1 {
                         let nx = x as i32 + dx;
                         let ny = y as i32 + dy;
-                        if nx >= 0 && nx < _num_cells as i32 && ny >= 0 && ny < _num_cells as i32 {
-                            neighbors.push((ny as usize) * _num_cells + nx as usize);
+                        if nx >= 0
+                            && nx < _cells_per_axis as i32
+                            && ny >= 0
+                            && ny < _cells_per_axis as i32
+                        {
+                            neighbors.push((ny as usize) * _cells_per_axis + nx as usize);
                         }
                     }
                 }
@@ -53,7 +57,7 @@ impl CellManager {
             ],
             cell_id_manager: IdManager::new(),
             food_id_manager: IdManager::new(),
-            _num_cells,
+            _cells_per_axis,
             _relation_matrix,
         }
     }
@@ -90,7 +94,7 @@ impl CellManager {
     fn get_cell_grid_index(&self, x: f32, y: f32) -> usize {
         let x = (x / GRID_CELL_SIZE as f32).floor() as usize;
         let y = (y / GRID_CELL_SIZE as f32).floor() as usize;
-        y * self._num_cells + x
+        y * self._cells_per_axis + x
     }
 
     fn add_cell(&mut self, cell: Cell) {
@@ -207,7 +211,9 @@ impl CellManager {
 
             let cell = self.cells.get(&id).unwrap();
             if cell.is_dead() {
-                self.add_food(cell.x, cell.y, DEFAULT_CELL_FOOD_VALUE);
+                if self.food.len() < MAX_FOOD {
+                    self.add_food(cell.x, cell.y, DEFAULT_CELL_FOOD_VALUE);
+                }
                 self.remove_cell(*id);
                 continue;
             }
@@ -226,11 +232,13 @@ impl CellManager {
             cell.reset();
         }
 
-        for _ in 0..FOOD_ADDED_PER_FRAME {
-            let x = rng.gen_range(0.0..GAME_SIZE as f32);
-            let y = rng.gen_range(0.0..GAME_SIZE as f32);
-            let food = DEFAULT_FOOD_VALUE;
-            self.add_food(x, y, food);
+        if self.food.len() < MAX_FOOD {
+            for _ in 0..FOOD_ADDED_PER_FRAME {
+                let x = rng.gen_range(0.0..GAME_SIZE as f32);
+                let y = rng.gen_range(0.0..GAME_SIZE as f32);
+                let food = DEFAULT_FOOD_VALUE;
+                self.add_food(x, y, food);
+            }
         }
     }
 

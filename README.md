@@ -169,9 +169,10 @@ The simulation configuration is defined in the `config.rs` file. Here are some k
     - `DEFAULT_FOOD_VALUE`: Default value of food.
     - `DEFAULT_CELL_FOOD_VALUE`: Default value of food for a dead cell.
     - `FOOD_ADDED_PER_FRAME`: Number of food sources added per frame. 
+    - `MAX_FOOD`: Max number of food sources.
 
 - **Forces**:
-    - `FORCE_MAX_RANGE_SQ`: Maximum range of forces (squared). This must be less than or equal to `GRID_CELL_SIZE`
+    - `FORCE_MAX_RANGE_SQ`: Maximum range of forces (squared). This must be less than or equal to sqrt(`GRID_CELL_SIZE`)
     - `FOOD_FORCE`: The ID for the food force.
     - `TOXIN_FORCE`: The ID for the toxin force.
 
