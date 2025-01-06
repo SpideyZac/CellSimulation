@@ -199,21 +199,20 @@ impl CellManager {
 
         self.emit_forces(&cell_keys);
 
-        for index in 0..self.cells.len() {
-            let id = cell_keys[index];
+        for id in cell_keys.iter() {
             let cell = self.cells.get_mut(&id).unwrap();
             let (prev_x, prev_y) = cell.update();
             let (x, y) = (cell.x, cell.y);
-            self.move_cell(id, prev_x, prev_y, x, y);
+            self.move_cell(*id, prev_x, prev_y, x, y);
 
             let cell = self.cells.get(&id).unwrap();
             if cell.is_dead() {
                 self.add_food(cell.x, cell.y, DEFAULT_CELL_FOOD_VALUE);
-                self.remove_cell(id);
+                self.remove_cell(*id);
                 continue;
             }
 
-            self.attempt_to_eat(id);
+            self.attempt_to_eat(*id);
 
             let cell = self.cells.get_mut(&id).unwrap();
             if cell.can_replicate() {
