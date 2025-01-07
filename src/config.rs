@@ -26,6 +26,7 @@ pub const FOOD_FORCE: u16 = 0;
 pub const TOXIN_FORCE: u16 = 1;
 
 pub const CELL_STARTING_FOOD: f32 = 50.0;
+pub const MAX_CELLS: usize = 1000;
 
 pub const DEFAULT_MUTATION_RATE: f32 = 0.015;
 pub const DEFAULT_PRIMARY_MUTATION_RATE: f32 = 0.001;

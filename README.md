@@ -181,6 +181,7 @@ The simulation configuration is defined in the `config.rs` file. Here are some k
 
 - **Cell Attributes**:
     - `CELL_STARTING_FOOD`: Starting amount of food for each cell.
+    - `MAX_CELLS`: Maximum amount of cells allowed.
  
 - **Cell DNA Defaults**:
     - `DEFAULT_MUTATION_RATE`: Default global mutation rate.

@@ -200,6 +200,7 @@ impl CellManager {
     pub fn update(&mut self) {
         let mut rng = thread_rng();
         let cell_keys: Vec<u64> = self.cells.keys().copied().collect();
+        let mut cells_length = cell_keys.len();
 
         self.emit_forces(&cell_keys);
 
@@ -215,17 +216,19 @@ impl CellManager {
                     self.add_food(cell.x, cell.y, DEFAULT_CELL_FOOD_VALUE);
                 }
                 self.remove_cell(*id);
+                cells_length -= 1;
                 continue;
             }
 
             self.attempt_to_eat(*id);
 
             let cell = self.cells.get_mut(&id).unwrap();
-            if cell.can_replicate() {
+            if cell.can_replicate() && cells_length < MAX_CELLS {
                 let id = self.cell_id_manager.get_id();
                 let new_cell = cell.replicate(id);
                 cell.reset();
                 self.add_cell(new_cell);
+                cells_length += 1;
                 continue;
             }
 
