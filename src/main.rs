@@ -85,6 +85,18 @@ fn save_state(state: &SimulationState, path: &str) -> std::io::Result<()> {
     Ok(())
 }
 
+fn save_state_json(state: &SimulationState, path: &str, pretty: bool) -> std::io::Result<()> {
+    std::fs::File::create(path)?;
+    let buffer;
+    if pretty {
+        buffer = serde_json::to_string_pretty(state).unwrap();
+    } else {
+        buffer = serde_json::to_string(state).unwrap();
+    }
+    std::fs::write(path, buffer)?;
+    Ok(())
+}
+
 fn load_state(path: &str) -> std::io::Result<SimulationState> {
     let buffer = std::fs::read(path)?;
     let state = bincode::deserialize(&buffer).unwrap();
@@ -152,8 +164,19 @@ fn main() {
         food: cell_manager.get_food_cloned().into_values().collect(),
     };
 
-    println!("Saving state to file");
+    println!("Saving state to file: {}", STATE_PATH);
     save_state(&state, STATE_PATH).unwrap();
+
+    let args = std::env::args().collect::<Vec<String>>();
+    if args.len() > 1 {
+        if args.len() > 2 && args[2] == "pretty" {
+            println!("Saving pretty JSON state to file: {}", &args[1]);
+            save_state_json(&state, &args[1], true).unwrap();
+        } else {
+            println!("Saving JSON state to file: {}", &args[1]);
+            save_state_json(&state, &args[1], false).unwrap();
+        }
+    }
 
     #[cfg(feature = "profiling")]
     if let Ok(report) = guard.report().build() {

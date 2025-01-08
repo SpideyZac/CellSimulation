@@ -7,8 +7,8 @@ pub const WINDOW_HEIGHT: usize = 1000;
 #[allow(dead_code)]
 pub const SLEEP_TIME: f32 = 0.1;
 
-pub const ITERATIONS: usize = 100000;
-pub const PRINT_DETAILS_AFTER_FRAMES: usize = 100;
+pub const ITERATIONS: usize = 100_000_000_000_000;
+pub const PRINT_DETAILS_AFTER_FRAMES: usize = 1000;
 
 pub const GAME_SIZE: usize = 1000;
 pub const GRID_CELL_SIZE: usize = 100;

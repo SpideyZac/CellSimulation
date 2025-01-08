@@ -144,6 +144,21 @@ To enable these features, use the `--features` flag. For example, to enable both
 cargo run --release --features "graphics profiling"
 ```
 
+### Human Readable State
+
+The program uses `bincode` to save the main state of the simulation. This is a binary format and is not human readable. If you wish to also generate a human readable version (`JSON`),
+then you can run the program by passing in some additional arguments as such:
+
+Unprettified:
+```sh
+cargo run --release readable.json
+```
+
+Prettified:
+```sh
+cargo run --release pretty_readable.json pretty
+```
+
 ### Modifying the Configuration
 
 The simulation configuration is defined in the `config.rs` file. Here are some key configuration parameters you can modify:
