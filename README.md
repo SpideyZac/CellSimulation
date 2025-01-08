@@ -217,7 +217,3 @@ The simulation configuration is defined in the `config.rs` file. Here are some k
     - `FOOD_RETENTION_FROM_REPLICATION`: Food retention after replication.
 
 To modify any of these parameters, simply edit the values in the `config.rs` file and rebuild the project.
-
-## Conclusion
-
-The Cell Simulation project is a detailed and complex system that models the behavior of cells in a simulated environment. The simulation involves various components and processes, including cells, DNA, the environment, initialization, iteration, and forces. Each component plays a crucial role in the overall behavior of the simulation, making it a fascinating and intricate system to study and explore.
