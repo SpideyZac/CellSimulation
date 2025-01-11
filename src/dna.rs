@@ -151,8 +151,8 @@ impl DNA {
                     self.0[codon_index].1 = TOXIN_FORCE;
                 }
 
-                if self.0[codon_index].1 == TOXIN_FORCE && self.0[codon_index].2 > 2.0 {
-                    self.0[codon_index].2 = 2.0;
+                if self.0[codon_index].1 == TOXIN_FORCE && self.0[codon_index].2 > MAX_TOXIN_FORCE {
+                    self.0[codon_index].2 = MAX_TOXIN_FORCE;
                 }
 
                 if self.0[codon_index].2 < 0.0 {
@@ -160,7 +160,9 @@ impl DNA {
                 }
             }
             PrimaryBases::ReplicationFood => {
-                self.0[codon_index].2 = self.0[codon_index].2.max(CELL_STARTING_FOOD * 1.1)
+                self.0[codon_index].2 = self.0[codon_index]
+                    .2
+                    .max(CELL_STARTING_FOOD * MIN_FOOD_TO_REPLICATE_RATIO)
             }
             PrimaryBases::DisableCodon
             | PrimaryBases::GlobalMutationRate

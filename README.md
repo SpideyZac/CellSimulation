@@ -197,6 +197,8 @@ The simulation configuration is defined in the `config.rs` file. Here are some k
 - **Cell Attributes**:
     - `CELL_STARTING_FOOD`: Starting amount of food for each cell.
     - `MAX_CELLS`: Maximum amount of cells allowed.
+    - `MIN_FOOD_TO_REPLICATE_RATIO`: The minimum amount of food to replicate (`CELL_STARTING_FOOD` * `MIN_FOOD_TO_REPLICATE_RATIO`). Should be > 1.0.
+    - `MAX_TOXIN_FORCE`: The max magnitude of emitted toxin forces.
  
 - **Cell DNA Defaults**:
     - `DEFAULT_MUTATION_RATE`: Default global mutation rate.
