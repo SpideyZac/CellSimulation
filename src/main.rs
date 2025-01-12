@@ -128,15 +128,16 @@ fn main() {
     #[cfg(feature = "graphics")]
     let mut graphics_win = graphics::Graphics::new();
 
-    for i in 0..ITERATIONS {
+    let mut iteration = 0;
+    while iteration < ITERATIONS {
         if !running.load(std::sync::atomic::Ordering::SeqCst) {
             break;
         }
         cell_manager.update();
         let cells = cell_manager.get_cells();
         let len = cells.len();
-        if i % PRINT_DETAILS_AFTER_FRAMES == 0 {
-            println!("iteration: {} cells: {}", i, len);
+        if iteration % PRINT_DETAILS_AFTER_FRAMES == 0 {
+            println!("iteration: {} cells: {}", iteration, len);
         }
 
         #[cfg(feature = "graphics")]
@@ -152,10 +153,13 @@ fn main() {
             std::thread::sleep(std::time::Duration::from_secs_f32(SLEEP_TIME));
         }
 
+        iteration += 1;
+
         if len == 0 {
             println!("All cells are dead, restarting simulation");
             cell_manager = cell_manager::CellManager::new();
             cell_manager.init();
+            iteration = 0;
         }
     }
 

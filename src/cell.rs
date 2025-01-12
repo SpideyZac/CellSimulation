@@ -147,12 +147,14 @@ impl Cell {
     }
 
     pub fn replicate(&mut self, id: u64) -> Cell {
+        let x_change = if self.x > 1.0 - 1.0 { -1.0 } else { 1.0 };
+        let y_change = if self.y > 1.0 - 1.0 { -1.0 } else { 1.0 };
         let (mut new_cell, activated_codons) = Self::_new(
             id,
             self.last_forces.clone(),
             self.dna.clone(),
-            self.x,
-            self.y,
+            self.x + x_change,
+            self.y + y_change,
         );
         new_cell.dna.mutate(&activated_codons);
 

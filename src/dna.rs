@@ -43,7 +43,17 @@ pub struct DNA(Vec<(u8, u16, f32)>);
 
 impl DNA {
     pub fn new() -> Self {
-        DNA(vec![(0, FOOD_FORCE, 1.0)])
+        let mut rng = thread_rng();
+        let mut dna = Self(Vec::new());
+        for i in 0..rng.gen_range(1..=5) {
+            dna.0.push((
+                rng.gen_range(0..=10),
+                rng.gen_range(0..=10),
+                rng.gen_range(-10.0..=10.0),
+            ));
+            Self::fix_broken_codon(&mut dna, i);
+        }
+        dna
     }
 
     pub fn get_activated_codons(&self, initial_forces: FxHashMap<u16, f32>) -> Vec<usize> {
