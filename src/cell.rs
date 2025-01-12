@@ -20,6 +20,7 @@ pub struct Cell {
     next_y: f32,
     pub food: f32,
     last_forces: FxHashMap<u16, f32>,
+    _initial_food_usage: f32,
 }
 
 impl Cell {
@@ -32,6 +33,19 @@ impl Cell {
     ) -> (Self, Vec<usize>) {
         let activated_codons = dna.get_activated_codons(initial_forces);
         let (attractions, emissions, food_to_replicate, size) = dna.process_dna(&activated_codons);
+
+        let mut _initial_food_usage = 0.0;
+        _initial_food_usage += size * FOOD_USED_PER_SIZE_UNIT;
+
+        for (id, magnitude) in emissions.iter() {
+            if *id == TOXIN_FORCE {
+                _initial_food_usage += *magnitude * FOOD_USED_PER_TOXIN_UNIT_EMITTED;
+            } else {
+                _initial_food_usage += *magnitude * FOOD_USED_PER_FORCE_EMITTED;
+            }
+        }
+
+        _initial_food_usage += FOOD_USED_PER_FRAME;
 
         (
             Cell {
@@ -47,6 +61,7 @@ impl Cell {
                 next_y: y,
                 food: CELL_STARTING_FOOD,
                 last_forces: FxHashMap::default(),
+                _initial_food_usage,
             },
             activated_codons,
         )
@@ -108,22 +123,12 @@ impl Cell {
     }
 
     fn calculate_general_food_usage(&self, prev_x: f32, prev_y: f32) -> f32 {
-        let mut food_usage = 0.0;
+        let mut food_usage = self._initial_food_usage;
 
         food_usage += (self.x - prev_x).abs() * FOOD_USED_PER_UNIT_MOVED;
         food_usage += (self.y - prev_y).abs() * FOOD_USED_PER_UNIT_MOVED;
 
-        food_usage += self.size * FOOD_USED_PER_SIZE_UNIT;
-
-        for (id, magnitude) in self.emissions.iter() {
-            if *id == TOXIN_FORCE {
-                food_usage += *magnitude * FOOD_USED_PER_TOXIN_UNIT_EMITTED;
-            } else {
-                food_usage += *magnitude * FOOD_USED_PER_FORCE_EMITTED;
-            }
-        }
-
-        food_usage + FOOD_USED_PER_FRAME
+        food_usage
     }
 
     fn update_food(&mut self, prev_x: f32, prev_y: f32) {
