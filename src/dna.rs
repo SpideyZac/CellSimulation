@@ -45,12 +45,7 @@ impl DNA {
     pub fn new() -> Self {
         let mut rng = thread_rng();
         let mut dna = Self(Vec::new());
-        dna.0.push((
-            rng.gen_range(0..=10),
-            rng.gen_range(0..=10),
-            rng.gen_range(-10.0..=10.0),
-        ));
-        Self::fix_broken_codon(&mut dna, 0);
+        dna.0.push(dna.random_codon(&mut rng));
         dna
     }
 
@@ -179,16 +174,70 @@ impl DNA {
                     .2
                     .max(CELL_STARTING_FOOD * MIN_FOOD_TO_REPLICATE_RATIO)
             }
-            PrimaryBases::DisableCodon
-            | PrimaryBases::GlobalMutationRate
+            PrimaryBases::DisableCodon | PrimaryBases::CellSize => {
+                self.0[codon_index].2 = self.0[codon_index].2.max(0.0)
+            }
+            PrimaryBases::GlobalMutationRate
             | PrimaryBases::IndividualMutationRate
             | PrimaryBases::PrimaryMutationRate
             | PrimaryBases::SecondaryMutationRate
             | PrimaryBases::AddCodonMutationRate
-            | PrimaryBases::RemoveCodonMutationRate
-            | PrimaryBases::CellSize => self.0[codon_index].2 = self.0[codon_index].2.max(0.0),
+            | PrimaryBases::RemoveCodonMutationRate => {
+                self.0[codon_index].2 = self.0[codon_index].2.max(0.0).min(1.0)
+            }
             _ => (),
         };
+    }
+
+    fn random_codon(&self, rng: &mut ThreadRng) -> (u8, u16, f32) {
+        let primary_base = rng.gen_range(0..=10);
+        if primary_base == PrimaryBases::Attraction as u8 {
+            (
+                primary_base,
+                rng.gen_range(0..=10),
+                rng.gen_range(-10.0..=10.0),
+            )
+        } else if primary_base == PrimaryBases::Emission as u8 {
+            let secondary_force = rng.gen_range(0..=10);
+            if secondary_force == FOOD_FORCE {
+                (
+                    primary_base,
+                    TOXIN_FORCE,
+                    rng.gen_range(0.0..=MAX_TOXIN_FORCE),
+                )
+            } else if secondary_force == TOXIN_FORCE {
+                (
+                    primary_base,
+                    secondary_force,
+                    rng.gen_range(0.0..=MAX_TOXIN_FORCE),
+                )
+            } else {
+                (primary_base, secondary_force, rng.gen_range(-10.0..=10.0))
+            }
+        } else if primary_base == PrimaryBases::ReplicationFood as u8 {
+            (
+                primary_base,
+                0,
+                rng.gen_range(
+                    CELL_STARTING_FOOD * MIN_FOOD_TO_REPLICATE_RATIO
+                        ..=CELL_STARTING_FOOD * MIN_FOOD_TO_REPLICATE_RATIO * 2.0,
+                ),
+            )
+        } else if primary_base == PrimaryBases::DisableCodon as u8 {
+            (
+                primary_base,
+                rng.gen_range(0..=self.0.len()) as u16,
+                rng.gen_range(0.0..=100.0),
+            )
+        } else if primary_base == PrimaryBases::CellSize as u8 {
+            (
+                primary_base,
+                0,
+                rng.gen_range(0.1..=DEFAULT_CELL_SIZE_SQ * 2.0),
+            )
+        } else {
+            (primary_base, 0, rng.gen_range(0.0..=1.0))
+        }
     }
 
     fn frameshift_mutation(
@@ -200,15 +249,7 @@ impl DNA {
         let r = rng.gen_range(0.0..=1.0);
         if r <= add_codon_mutation_rate {
             let codon_index = rng.gen_range(0..self.0.len());
-            self.0.insert(
-                codon_index,
-                (
-                    rng.gen_range(0..=10),
-                    rng.gen_range(0..=10),
-                    rng.gen_range(-10.0..=10.0),
-                ),
-            );
-            self.fix_broken_codon(codon_index);
+            self.0.insert(codon_index, self.random_codon(rng));
         } else if r <= remove_codon_mutation_rate && self.0.len() > 0 {
             let codon_index = rng.gen_range(0..self.0.len());
             self.0.remove(codon_index);
