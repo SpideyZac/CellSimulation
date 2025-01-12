@@ -158,7 +158,7 @@ impl Cell {
         );
         new_cell.dna.mutate(&activated_codons);
 
-        self.food -= self.food_to_replicate * FOOD_RETENTION_FROM_REPLICATION;
+        self.food -= self.food_to_replicate * (1.0 - FOOD_RETENTION_FROM_REPLICATION);
 
         new_cell
     }
