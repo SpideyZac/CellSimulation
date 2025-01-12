@@ -45,14 +45,12 @@ impl DNA {
     pub fn new() -> Self {
         let mut rng = thread_rng();
         let mut dna = Self(Vec::new());
-        for i in 0..rng.gen_range(1..=5) {
-            dna.0.push((
-                rng.gen_range(0..=10),
-                rng.gen_range(0..=10),
-                rng.gen_range(-10.0..=10.0),
-            ));
-            Self::fix_broken_codon(&mut dna, i);
-        }
+        dna.0.push((
+            rng.gen_range(0..=10),
+            rng.gen_range(0..=10),
+            rng.gen_range(-10.0..=10.0),
+        ));
+        Self::fix_broken_codon(&mut dna, 0);
         dna
     }
 
