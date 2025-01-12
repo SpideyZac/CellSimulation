@@ -111,6 +111,7 @@ impl DNA {
 
     fn get_mutation_rates(
         &self,
+        rng: &mut ThreadRng,
         activated_codons: &[usize],
     ) -> (f32, FxHashMap<usize, f32>, f32, f32, f32, f32) {
         let mut global_mutation_rate = DEFAULT_MUTATION_RATE;
@@ -120,25 +121,31 @@ impl DNA {
         let mut add_codon_mutation_rate = DEFAULT_ADD_CODON_MUTATION_RATE;
         let mut remove_codon_mutation_rate = DEFAULT_REMOVE_CODON_MUTATION_RATE;
 
-        for codon_index in activated_codons {
-            let codon_index = *codon_index;
-            match PrimaryBases::from(self.0[codon_index].0) {
-                PrimaryBases::GlobalMutationRate => global_mutation_rate = self.0[codon_index].2,
-                PrimaryBases::IndividualMutationRate => {
-                    individual_mutation_rates
-                        .insert(self.0[codon_index].1 as usize, self.0[codon_index].2);
+        if rng.gen_range(0.0..=1.0) > FUDGED_MUTATION_RATE_CHANCE {
+            for codon_index in activated_codons {
+                let codon_index = *codon_index;
+                match PrimaryBases::from(self.0[codon_index].0) {
+                    PrimaryBases::GlobalMutationRate => {
+                        global_mutation_rate = self.0[codon_index].2
+                    }
+                    PrimaryBases::IndividualMutationRate => {
+                        individual_mutation_rates
+                            .insert(self.0[codon_index].1 as usize, self.0[codon_index].2);
+                    }
+                    PrimaryBases::PrimaryMutationRate => {
+                        primary_mutation_rate = self.0[codon_index].2
+                    }
+                    PrimaryBases::SecondaryMutationRate => {
+                        secondary_mutation_rate = self.0[codon_index].2
+                    }
+                    PrimaryBases::AddCodonMutationRate => {
+                        add_codon_mutation_rate = self.0[codon_index].2
+                    }
+                    PrimaryBases::RemoveCodonMutationRate => {
+                        remove_codon_mutation_rate = self.0[codon_index].2
+                    }
+                    _ => (),
                 }
-                PrimaryBases::PrimaryMutationRate => primary_mutation_rate = self.0[codon_index].2,
-                PrimaryBases::SecondaryMutationRate => {
-                    secondary_mutation_rate = self.0[codon_index].2
-                }
-                PrimaryBases::AddCodonMutationRate => {
-                    add_codon_mutation_rate = self.0[codon_index].2
-                }
-                PrimaryBases::RemoveCodonMutationRate => {
-                    remove_codon_mutation_rate = self.0[codon_index].2
-                }
-                _ => (),
             }
         }
 
@@ -217,7 +224,7 @@ impl DNA {
             secondary_mutation_rate,
             add_codon_mutation_rate,
             remove_codon_mutation_rate,
-        ) = self.get_mutation_rates(activated_codons);
+        ) = self.get_mutation_rates(&mut rng, activated_codons);
 
         for codon_index in 0..self.0.len() {
             let mutation_rate = individual_mutation_rates

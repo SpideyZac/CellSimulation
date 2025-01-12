@@ -201,6 +201,7 @@ The simulation configuration is defined in the `config.rs` file. Here are some k
     - `MAX_TOXIN_FORCE`: The max magnitude of emitted toxin forces.
  
 - **Cell DNA Defaults**:
+    - `FUDGED_MUTATION_RATE_CHANCE`: The chance that a cell ignores its "DNA defined" mutation rates and uses the defaults.
     - `DEFAULT_MUTATION_RATE`: Default global mutation rate.
     - `DEFAULT_PRIMARY_MUTATION_RATE`: Default mutation rate for primary bases.
     - `DEFAULT_SECONDARY_MUTATION_RATE`: Default mutation rate for secondary bases.
