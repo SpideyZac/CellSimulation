@@ -20,6 +20,7 @@ pub struct Cell {
     next_y: f32,
     pub food: f32,
     last_forces: FxHashMap<u16, f32>,
+    iterations: usize,
     _initial_food_usage: f32,
 }
 
@@ -61,6 +62,7 @@ impl Cell {
                 next_y: y,
                 food: CELL_STARTING_FOOD,
                 last_forces: FxHashMap::default(),
+                iterations: 0,
                 _initial_food_usage,
             },
             activated_codons,
@@ -143,6 +145,8 @@ impl Cell {
         self.update_pos();
         self.update_food(prev_x, prev_y);
 
+        self.iterations += 1;
+
         (prev_x, prev_y)
     }
 
@@ -172,7 +176,7 @@ impl Cell {
     }
 
     pub fn is_dead(&self) -> bool {
-        self.food <= 0.0
+        self.food <= 0.0 || self.iterations >= MAX_LIFESPAN
     }
 
     pub fn get_emissions(&self) -> Vec<(u16, f32)> {

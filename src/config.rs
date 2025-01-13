@@ -5,7 +5,7 @@ pub const WINDOW_WIDTH: usize = 2000;
 #[allow(dead_code)]
 pub const WINDOW_HEIGHT: usize = 1000;
 #[allow(dead_code)]
-pub const SLEEP_TIME: f32 = 0.05;
+pub const SLEEP_TIME: f32 = 0.01;
 
 pub const ITERATIONS: usize = 100_000_000_000_000;
 pub const PRINT_DETAILS_AFTER_FRAMES: usize = 1000;
@@ -17,8 +17,8 @@ pub const STARTING_CELLS: usize = 1000;
 pub const STARTING_FOOD: usize = 2000;
 
 pub const DEFAULT_FOOD_VALUE: f32 = 25.0;
-pub const DEFAULT_CELL_FOOD_VALUE: f32 = 15.0;
-pub const FOOD_ADDED_PER_FRAME: usize = 15;
+pub const DEFAULT_CELL_FOOD_VALUE: f32 = 20.0;
+pub const FOOD_ADDED_PER_FRAME: usize = 5;
 pub const MAX_FOOD: usize = 2000;
 
 pub const FORCE_MAX_RANGE_SQ: f32 = 10000.0;
@@ -28,7 +28,8 @@ pub const TOXIN_FORCE: u16 = 1;
 pub const CELL_STARTING_FOOD: f32 = 50.0;
 pub const MAX_CELLS: usize = 2000;
 pub const MIN_FOOD_TO_REPLICATE_RATIO: f32 = 1.1;
-pub const MAX_TOXIN_FORCE: f32 = 2.0;
+pub const MAX_TOXIN_FORCE: f32 = 4.0;
+pub const MAX_LIFESPAN: usize = 5000;
 
 pub const FUDGED_MUTATION_RATE_CHANCE: f32 = 0.00001;
 pub const DEFAULT_MUTATION_RATE: f32 = 0.01;
