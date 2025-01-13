@@ -5,6 +5,55 @@ use rustc_hash::FxHashMap;
 use crate::config::*;
 use crate::dna::DNA;
 
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct ReadableCell {
+    x: f32,
+    y: f32,
+    food: f32,
+    dna: DNA,
+    attractions: FxHashMap<u16, f32>,
+    emissions: Vec<(u16, f32)>,
+    disabled_codons: Vec<usize>,
+    global_mutation_rate: f32,
+    individual_mutation_rates: FxHashMap<usize, f32>,
+    primary_mutation_rate: f32,
+    secondary_mutation_rate: f32,
+    add_codon_mutation_rate: f32,
+    remove_codon_mutation_rate: f32,
+    food_to_replicate: f32,
+    size: f32,
+}
+
+impl ReadableCell {
+    pub fn new(cell: &Cell) -> Self {
+        let (
+            global_mutation_rate,
+            individual_mutation_rates,
+            primary_mutation_rate,
+            secondary_mutation_rate,
+            add_codon_mutation_rate,
+            remove_codon_mutation_rate,
+        ) = cell.dna.get_mutation_rates_no_rng();
+        Self {
+            x: cell.x,
+            y: cell.y,
+            food: cell.food,
+            dna: cell.dna.clone(),
+            attractions: cell.attractions.clone(),
+            emissions: cell.emissions.clone(),
+            disabled_codons: cell.dna.get_disabled_codons(),
+            global_mutation_rate,
+            individual_mutation_rates,
+            primary_mutation_rate,
+            secondary_mutation_rate,
+            add_codon_mutation_rate,
+            remove_codon_mutation_rate,
+            food_to_replicate: cell.food_to_replicate,
+            size: cell.size,
+        }
+    }
+}
+
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct Cell {
     #[serde(skip)]

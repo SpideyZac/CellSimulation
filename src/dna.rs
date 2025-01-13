@@ -61,12 +61,23 @@ impl DNA {
                     && *initial_forces.get(&self.0[codon_index].1).unwrap_or(&0.0)
                         >= self.0[codon_index].2
                 {
-                    activated_codons.retain(|&x| x != codon_index);
+                    activated_codons.retain(|&x| x != codon_index + 1);
                 }
             }
         }
 
         activated_codons
+    }
+
+    pub fn get_disabled_codons(&self) -> Vec<usize> {
+        let mut disabled_codons = Vec::new();
+        for codon_index in 0..self.0.len() {
+            if self.0[codon_index].0 == PrimaryBases::DisableCodon as u8 {
+                disabled_codons.push(codon_index + 1);
+            }
+        }
+
+        disabled_codons
     }
 
     pub fn process_dna(
@@ -154,6 +165,45 @@ impl DNA {
         )
     }
 
+    pub fn get_mutation_rates_no_rng(&self) -> (f32, FxHashMap<usize, f32>, f32, f32, f32, f32) {
+        let mut global_mutation_rate = DEFAULT_MUTATION_RATE;
+        let mut individual_mutation_rates = FxHashMap::default();
+        let mut primary_mutation_rate = DEFAULT_PRIMARY_MUTATION_RATE;
+        let mut secondary_mutation_rate = DEFAULT_SECONDARY_MUTATION_RATE;
+        let mut add_codon_mutation_rate = DEFAULT_ADD_CODON_MUTATION_RATE;
+        let mut remove_codon_mutation_rate = DEFAULT_REMOVE_CODON_MUTATION_RATE;
+
+        for codon_index in 0..self.0.len() {
+            match PrimaryBases::from(self.0[codon_index].0) {
+                PrimaryBases::GlobalMutationRate => global_mutation_rate = self.0[codon_index].2,
+                PrimaryBases::IndividualMutationRate => {
+                    individual_mutation_rates
+                        .insert(self.0[codon_index].1 as usize, self.0[codon_index].2);
+                }
+                PrimaryBases::PrimaryMutationRate => primary_mutation_rate = self.0[codon_index].2,
+                PrimaryBases::SecondaryMutationRate => {
+                    secondary_mutation_rate = self.0[codon_index].2
+                }
+                PrimaryBases::AddCodonMutationRate => {
+                    add_codon_mutation_rate = self.0[codon_index].2
+                }
+                PrimaryBases::RemoveCodonMutationRate => {
+                    remove_codon_mutation_rate = self.0[codon_index].2
+                }
+                _ => (),
+            }
+        }
+
+        (
+            global_mutation_rate,
+            individual_mutation_rates,
+            primary_mutation_rate,
+            secondary_mutation_rate,
+            add_codon_mutation_rate,
+            remove_codon_mutation_rate,
+        )
+    }
+
     fn fix_broken_codon(&mut self, codon_index: usize) {
         match PrimaryBases::from(self.0[codon_index].0) {
             PrimaryBases::Emission => {
@@ -226,7 +276,7 @@ impl DNA {
         } else if primary_base == PrimaryBases::DisableCodon as u8 {
             (
                 primary_base,
-                rng.gen_range(0..=self.0.len()) as u16,
+                rng.gen_range(0..=10) as u16,
                 rng.gen_range(0.0..=100.0),
             )
         } else if primary_base == PrimaryBases::CellSize as u8 {

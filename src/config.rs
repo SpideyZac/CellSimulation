@@ -18,7 +18,7 @@ pub const STARTING_FOOD: usize = 2000;
 
 pub const DEFAULT_FOOD_VALUE: f32 = 25.0;
 pub const DEFAULT_CELL_FOOD_VALUE: f32 = 20.0;
-pub const FOOD_ADDED_PER_FRAME: usize = 5;
+pub const FOOD_ADDED_PER_FRAME: usize = 10;
 pub const MAX_FOOD: usize = 2000;
 
 pub const FORCE_MAX_RANGE_SQ: f32 = 10000.0;

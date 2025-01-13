@@ -76,6 +76,14 @@ mod graphics {
 struct SimulationState {
     cells: Vec<cell::Cell>,
     food: Vec<(f32, f32, f32)>,
+    iteration: usize,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+struct SimulationStateJson {
+    cells: Vec<cell::ReadableCell>,
+    food: Vec<(f32, f32, f32)>,
+    iteration: usize,
 }
 
 fn save_state(state: &SimulationState, path: &str) -> std::io::Result<()> {
@@ -85,14 +93,18 @@ fn save_state(state: &SimulationState, path: &str) -> std::io::Result<()> {
     Ok(())
 }
 
-fn save_state_json(state: &SimulationState, path: &str, pretty: bool) -> std::io::Result<()> {
+fn save_state_json(state: &SimulationState, path: &str) -> std::io::Result<()> {
     std::fs::File::create(path)?;
-    let buffer;
-    if pretty {
-        buffer = serde_json::to_string_pretty(state).unwrap();
-    } else {
-        buffer = serde_json::to_string(state).unwrap();
-    }
+    let state = SimulationStateJson {
+        cells: state
+            .cells
+            .iter()
+            .map(|c| cell::ReadableCell::new(c))
+            .collect(),
+        food: state.food.clone(),
+        iteration: state.iteration,
+    };
+    let buffer = serde_json::to_string(&state).unwrap();
     std::fs::write(path, buffer)?;
     Ok(())
 }
@@ -115,9 +127,11 @@ fn main() {
         let _ = running_clone.store(false, std::sync::atomic::Ordering::SeqCst);
     });
 
+    let mut iteration = 0;
     if let Ok(state) = load_state(STATE_PATH) {
         println!("Loaded state from file");
         cell_manager.init_with_starting(state.cells, state.food);
+        iteration = state.iteration;
     } else {
         println!("No state file found, starting fresh");
         cell_manager.init();
@@ -128,7 +142,6 @@ fn main() {
     #[cfg(feature = "graphics")]
     let mut graphics_win = graphics::Graphics::new();
 
-    let mut iteration = 0;
     while iteration < ITERATIONS {
         if !running.load(std::sync::atomic::Ordering::SeqCst) {
             break;
@@ -166,6 +179,7 @@ fn main() {
     let state = SimulationState {
         cells: cell_manager.get_cells_cloned().into_values().collect(),
         food: cell_manager.get_food_cloned().into_values().collect(),
+        iteration,
     };
 
     println!("Saving state to file: {}", STATE_PATH);
@@ -173,13 +187,8 @@ fn main() {
 
     let args = std::env::args().collect::<Vec<String>>();
     if args.len() > 1 {
-        if args.len() > 2 && args[2] == "pretty" {
-            println!("Saving pretty JSON state to file: {}", &args[1]);
-            save_state_json(&state, &args[1], true).unwrap();
-        } else {
-            println!("Saving JSON state to file: {}", &args[1]);
-            save_state_json(&state, &args[1], false).unwrap();
-        }
+        println!("Saving JSON state to file: {}", &args[1]);
+        save_state_json(&state, &args[1]).unwrap();
     }
 
     #[cfg(feature = "profiling")]

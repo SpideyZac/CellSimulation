@@ -44,7 +44,7 @@ In the Cell Simulation, each cell's behavior is determined by its DNA, which con
 
 ##### 3. Disable Codon (2)
 - **Description**: This codon type can disable other codons based on certain conditions.
-- **Effect**: If the force defined by the secondary base exceeds the value, the codon is disabled, preventing its effect on the cell's behavior.
+- **Effect**: If the force defined by the secondary base exceeds the value, the following codon is disabled, preventing its effect on the cell's behavior.
 
 ##### 4. Global Mutation Rate (3)
 - **Description**: This codon type defines the global mutation rate for the cell's DNA.
@@ -149,14 +149,8 @@ cargo run --release --features "graphics profiling"
 The program uses `bincode` to save the main state of the simulation. This is a binary format and is not human readable. If you wish to also generate a human readable version (`JSON`),
 then you can run the program by passing in some additional arguments as such:
 
-Unprettified:
 ```sh
 cargo run --release readable.json
-```
-
-Prettified:
-```sh
-cargo run --release pretty_readable.json pretty
 ```
 
 ### Modifying the Configuration
