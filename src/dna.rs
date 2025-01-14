@@ -53,7 +53,7 @@ impl DNA {
         self.0.len()
     }
 
-    pub fn get_activated_codons(&self, initial_forces: FxHashMap<u16, f32>) -> Vec<usize> {
+    pub fn get_activated_codons(&self, initial_forces: &FxHashMap<u16, f32>) -> Vec<usize> {
         let mut activated_codons = Vec::with_capacity(self.0.len());
         for codon_index in 0..self.0.len() {
             activated_codons.push(codon_index);
@@ -73,11 +73,17 @@ impl DNA {
         activated_codons
     }
 
-    pub fn get_disabled_codons(&self) -> Vec<usize> {
+    pub fn get_disabled_codons(&self, initial_forces: &FxHashMap<u16, f32>) -> Vec<(usize, bool)> {
         let mut disabled_codons = Vec::new();
         for codon_index in 0..self.0.len() {
             if self.0[codon_index].0 == PrimaryBases::DisableCodon as u8 {
-                disabled_codons.push(codon_index + 1);
+                if *initial_forces.get(&self.0[codon_index].1).unwrap_or(&0.0)
+                    >= self.0[codon_index].2
+                {
+                    disabled_codons.push((codon_index, true));
+                } else {
+                    disabled_codons.push((codon_index, false));
+                }
             }
         }
 

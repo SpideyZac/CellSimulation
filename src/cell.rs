@@ -13,7 +13,7 @@ pub struct ReadableCell {
     dna: DNA,
     attractions: FxHashMap<u16, f32>,
     emissions: Vec<(u16, f32)>,
-    disabled_codons: Vec<usize>,
+    disabled_codons: Vec<(usize, bool)>,
     global_mutation_rate: f32,
     individual_mutation_rates: FxHashMap<usize, f32>,
     primary_mutation_rate: f32,
@@ -34,6 +34,7 @@ impl ReadableCell {
             add_codon_mutation_rate,
             remove_codon_mutation_rate,
         ) = cell.dna.get_mutation_rates_no_rng();
+
         Self {
             x: cell.x,
             y: cell.y,
@@ -41,7 +42,7 @@ impl ReadableCell {
             dna: cell.dna.clone(),
             attractions: cell.attractions.clone(),
             emissions: cell.emissions.clone(),
-            disabled_codons: cell.dna.get_disabled_codons(),
+            disabled_codons: cell.dna.get_disabled_codons(&cell.initial_forces),
             global_mutation_rate,
             individual_mutation_rates,
             primary_mutation_rate,
@@ -70,6 +71,7 @@ pub struct Cell {
     pub food: f32,
     last_forces: FxHashMap<u16, f32>,
     iterations: usize,
+    pub initial_forces: FxHashMap<u16, f32>,
     _initial_food_usage: f32,
 }
 
@@ -81,7 +83,7 @@ impl Cell {
         x: f32,
         y: f32,
     ) -> (Self, Vec<usize>) {
-        let activated_codons = dna.get_activated_codons(initial_forces);
+        let activated_codons = dna.get_activated_codons(&initial_forces);
         let (attractions, emissions, food_to_replicate, size) = dna.process_dna(&activated_codons);
 
         let mut _initial_food_usage = 0.0;
@@ -114,6 +116,7 @@ impl Cell {
                 food: CELL_STARTING_FOOD,
                 last_forces: FxHashMap::default(),
                 iterations: 0,
+                initial_forces,
                 _initial_food_usage,
             },
             activated_codons,
