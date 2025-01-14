@@ -213,5 +213,6 @@ The simulation configuration is defined in the `config.rs` file. Here are some k
     - `FOOD_USED_PER_FORCE_EMITTED`: Food used per force emitted.
     - `FOOD_USED_PER_TOXIN_UNIT_EMITTED`: Food used per toxin unit emitted.
     - `FOOD_RETENTION_FROM_REPLICATION`: Food retention after replication.
+    - `FOOD_USED_PER_CODON`: Food used per codon in the cell's DNA.
 
 To modify any of these parameters, simply edit the values in the `config.rs` file and rebuild the project.

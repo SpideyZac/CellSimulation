@@ -95,6 +95,8 @@ impl Cell {
             }
         }
 
+        _initial_food_usage += dna.get_codon_count() as f32 * FOOD_USED_PER_CODON;
+
         _initial_food_usage += FOOD_USED_PER_FRAME;
 
         (

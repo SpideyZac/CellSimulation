@@ -49,6 +49,10 @@ impl DNA {
         dna
     }
 
+    pub fn get_codon_count(&self) -> usize {
+        self.0.len()
+    }
+
     pub fn get_activated_codons(&self, initial_forces: FxHashMap<u16, f32>) -> Vec<usize> {
         let mut activated_codons = Vec::with_capacity(self.0.len());
         for codon_index in 0..self.0.len() {
